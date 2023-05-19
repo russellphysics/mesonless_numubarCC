@@ -4,7 +4,6 @@ import h5py
 import argparse
 import numpy as np
 import twoBytwo_defs
-import threshold_backgrounds
 import auxiliary
 import glob
 import json
@@ -15,6 +14,8 @@ from mpl_toolkits.axes_grid1.inset_locator import (inset_axes, InsetPosition, ma
 # (3) pi0 gammas inbalance: gamma1>>gamma2
 # (4) pi0 gammas are colinear
 
+
+
 def files_processed(processed_files, total_files=1023, \
                     production_pot=1e19, target_pot=2.5e19):
     return target_pot/((processed_files*production_pot)/total_files)
@@ -22,6 +23,8 @@ def files_processed(processed_files, total_files=1023, \
 
 
 def charged_pion_threshold(d, threshold, scale_factor):
+    background_dict=dict()
+    
     cp_length={} # longest charged pion per neutrino interaction
     for key in d.keys():
         if d[key]['pdg']==abs(211):
@@ -37,7 +40,22 @@ def charged_pion_threshold(d, threshold, scale_factor):
     count_bgd=0
     for key in cp_length.keys():
         if cp_length[key]<=threshold: count_bgd+=1
-    print(count_bgd,' irreducible CC backgrounds with ',threshold,' cm tracking threshold')
+    print(count_bgd,' irreducible CC backgrounds with ',threshold,' cm tracking threshold \n',count_bgd*scale_factor,' irreducible events in 2.5x10^19 POT')
+
+    for key in d.keys():
+        spill_id = key.split('-')[0]
+        vertex_id = key.split('-')[1]
+        temp=(spill_id, vertex_id)
+        if temp in cp_length.keys():
+            if cp_length[temp]<=threshold:
+                background_dict[temp]=dict(
+                    nu_energy=d[key]['nu_energy'],
+                    q2=d[key]['q2'],
+                    mom=d[key]['mom'],
+                    ang=d[key]['ang'],
+                    vtx_x=d[key]['vtx_x'],
+                    vtx_y=d[key]['vtx_y'],
+                    vtx_z=d[key]['vtx_z'])                
 
     lbins=np.linspace(0,200,41); sbins=np.linspace(0,10,11)
     fig, ax = plt.subplots(figsize=(6,6))
@@ -65,19 +83,21 @@ def charged_pion_threshold(d, threshold, scale_factor):
     ax1.hist(meson_length, bins=sbins, weights=weight, histtype='step', color='b')
     ax1.set_xlim(0,10)
     ax1.axvline(x=threshold, linestyle='dashed', color='orange', label='tracking threshold')
-#    ax1.set_xlabel(r'$\pi^{\pm}$ Length [cm]')
-#    ax1.set_ylabel(r'$\nu$ Interactions')
 
-    ax.text(115,2420,r'NuMI ME RHC 2.5$\times$10$^{19}$ POT')
-    ax.text(0,2420,r'$\nu$CC')
+    ax.text(115,2125,r'NuMI ME RHC 2.5$\times$10$^{19}$ POT')
+    ax.text(0,2125,r'$\nu$CC')
     plt.savefig('irreducible_cc_beam_bgd.png')
+
+    return background_dict
 
 
 def main(cc_json_file, tracking_threshold, n_files_processed):
     f = open(cc_json_file)
     cc_pion_dict=json.load(f)
     scale_factor = files_processed(n_files_processed)
-    charged_pion_threshold(cc_pion_dict, tracking_threshold, scale_factor)
+    bgd_dict = charged_pion_threshold(cc_pion_dict, tracking_threshold, \
+                                      scale_factor)
+    auxiliary.save_dict_to_json(bgd_dict, 'cc_threshold_bkg_dict', True)
     
 
 
