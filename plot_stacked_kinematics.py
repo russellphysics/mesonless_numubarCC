@@ -4,28 +4,41 @@ import json
 import argparse
 
 
+
 def files_processed(processed_files, total_files=1023, \
                     production_pot=1e19, target_pot=2.5e19):
     return target_pot/((processed_files*production_pot)/total_files)
 
 
+
 def plot_stacked_histo(signal, signal_factor, wrong_sign, wrong_sign_factor, \
+                       dirt, dirt_factor, cc_threshold, cc_threshold_factor, \
                        metric, bins, xlabel, ylabel, figname, leg_location):
     fig, ax = plt.subplots(figsize=(6,6))
 
     s = [signal[key][metric] for key in signal.keys()]
     w = [wrong_sign[key][metric] for key in wrong_sign.keys()]
+    d = [dirt[key][metric] for key in dirt.keys()]
+    t = [cc_threshold[key][metric] for key in cc_threshold.keys()]
     if metric=='q2':
         s = [signal[key][metric]/1e6 for key in signal.keys()]
         w = [wrong_sign[key][metric]/1e6 for key in wrong_sign.keys()]
+        d = [dirt[key][metric]/1e6 for key in dirt.keys()]
+        t = [cc_threshold[key][metric]/1e6 for key in cc_threshold.keys()]
         
     s_weight = [signal_factor]*len(s)
     w_weight = [wrong_sign_factor]*len(w)
+    d_weight = [dirt_factor]*len(d)
+    t_weight = [cc_threshold_factor]*len(t)
 
     ax.hist(s, bins=bins, weights=s_weight, stacked=True, \
             label=r'mesonless $\bar{\nu}_\mu$ CC')
     ax.hist(w, bins=bins, weights=w_weight,  stacked=True, \
             label=r'mesonless $\nu_\mu$ CC')
+    ax.hist(t, bins=bins, weights=t_weight,  stacked=True, \
+            label=r'$\nu$CC threshold backgrounds')
+    ax.hist(d, bins=bins, weights=d_weight,  stacked=True, \
+            label=r'dirt backgrounds')
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.legend(loc=leg_location)
@@ -34,56 +47,85 @@ def plot_stacked_histo(signal, signal_factor, wrong_sign, wrong_sign_factor, \
     
 
 
-def main(signal, n_signal, wrong_sign, n_wrong_sign):
+def main(signal, n_signal, wrong_sign, n_wrong_sign, dirt, n_dirt, \
+         cc_threshold, n_cc_threshold, nc_pid, n_nc_pid):
     f = open(signal)
     signal_dict=json.load(f)
-    signal_sf = files_processed(50)
+    signal_sf = files_processed(n_signal)
 
     f = open(wrong_sign)
     wrong_sign_dict=json.load(f)
-    wrong_sign_sf = files_processed(50)                     
+    wrong_sign_sf = files_processed(n_wrong_sign)
+
+    f = open(dirt)
+    dirt_dict=json.load(f)
+    dirt_sf = files_processed(n_dirt)
+
+    f = open(cc_threshold)
+    cc_threshold_dict=json.load(f)
+    cc_threshold_sf = files_processed(n_cc_threshold)
+
+#    f = open(nc_pid)
+#    nc_pid_dict=json.load(f)
+#    nc_pid_sf = files_processed(n_nc_pid)                     
 
     plot_stacked_histo(signal_dict, signal_sf, \
                        wrong_sign_dict, wrong_sign_sf, \
+                       cc_threshold_dict, cc_threshold_sf, \
+                       dirt_dict, dirt_sf, \
                        'nu_energy', np.linspace(0,1e4,51), \
                        r'$\nu$ Energy [MeV]', r'$\nu$ Interactions / 200 MeV',\
                        'stacked_nu_energy', 'upper right')
 
     plot_stacked_histo(signal_dict, signal_sf, \
                        wrong_sign_dict, wrong_sign_sf, \
+                       cc_threshold_dict, cc_threshold_sf, \
+                       dirt_dict, dirt_sf, \
                        'q2', np.linspace(0,10,51), \
                        r'$Q^2$ [GeV$^2$]', r'$\nu$ Interactions / 200 MeV',\
                        'stacked_q2', 'upper right')
 
     plot_stacked_histo(signal_dict, signal_sf, \
                        wrong_sign_dict, wrong_sign_sf, \
+                       cc_threshold_dict, cc_threshold_sf, \
+                       dirt_dict, dirt_sf, \
                        'mom', np.linspace(0,1e4,51), \
                        r'Muon Candidate Momentum [MeV/c]', r'$\nu$ Interactions / 200 MeV/c',\
                        'stacked_mu_momentum', 'upper right')
 
     plot_stacked_histo(signal_dict, signal_sf, \
                        wrong_sign_dict, wrong_sign_sf, \
+                       cc_threshold_dict, cc_threshold_sf, \
+                       dirt_dict, dirt_sf, \
                        'ang', np.linspace(0,np.pi,51), \
                        r'$\theta_\mu$ [radians]', r'$\nu$ Interactions',\
                        'stacked_mu_angle', 'upper right')
 
     plot_stacked_histo(signal_dict, signal_sf, \
                        wrong_sign_dict, wrong_sign_sf, \
+                       cc_threshold_dict, cc_threshold_sf, \
+                       dirt_dict, dirt_sf, \
                        'vtx_x', np.linspace(-600,600,51), \
                        r'$\nu$ Vertex X Position [cm]', r'$\nu$ Interactions',\
                        'stacked_vertex_x', 'upper right')
 
     plot_stacked_histo(signal_dict, signal_sf, \
                        wrong_sign_dict, wrong_sign_sf, \
+                       cc_threshold_dict, cc_threshold_sf, \
+                       dirt_dict, dirt_sf, \
                        'vtx_y', np.linspace(-500,500,51), \
                        r'$\nu$ Vertex Y Position [cm]', r'$\nu$ Interactions',\
                        'stacked_vertex_y', 'upper right')
 
     plot_stacked_histo(signal_dict, signal_sf, \
                        wrong_sign_dict, wrong_sign_sf, \
+                       cc_threshold_dict, cc_threshold_sf, \
+                       dirt_dict, dirt_sf, \
                        'vtx_z', np.linspace(-2000,1000,51), \
                        r'$\nu$ Vertex Z Position [cm]', r'$\nu$ Interactions',\
                        'stacked_vertex_z', 'upper right')
+
+
     
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
@@ -95,6 +137,10 @@ if __name__=='__main__':
                         type=str, help='''wrong sign background JSON''')
     parser.add_argument('-nw','--n_wrong_sign', default=50, type=int, \
                         help='''number of files processed for wrong sign background JSON''')
+    parser.add_argument('-cc','--cc_threshold', default='cc_threshold_bkg_dict.json', \
+                        type=str, help='''nuCC thrshold background JSON''')
+    parser.add_argument('-ncc','--n_cc_threshold', default=100, type=int, \
+                        help='''number of files processed for wnuCC threshold background JSON''')
     parser.add_argument('-d','--dirt', default='dirt_bkg_dict.json', \
                         type=str, help='''dirt background JSON''')
     parser.add_argument('-nd','--n_dirt', default=1000, type=int, \
