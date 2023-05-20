@@ -4,7 +4,6 @@ import h5py
 import argparse
 import numpy as np
 import twoBytwo_defs
-import threshold_backgrounds
 import auxiliary
 import glob
 import json
@@ -18,6 +17,7 @@ def files_processed(processed_files, total_files=1023, \
 
 
 def charged_pion_threshold(d, threshold, scale_factor):
+    background_dict=dict()
     cp_count={} # charged pion count above tracking threshold per neutrino interaction
     for key in d.keys():
         if d[key]['pdg']==abs(211):
@@ -42,7 +42,28 @@ def charged_pion_threshold(d, threshold, scale_factor):
     count_bgd=0
     for key in cp_length.keys():
         if cp_length[key]>threshold: count_bgd+=1
-    print(count_bgd,' irreducible NC backgrounds with ',threshold,' cm tracking threshold')
+    print(count_bgd,' irreducible NC backgrounds with ',threshold,' cm tracking threshold\n',count_bgd*scale_factor,' irreducible events in 2.5x10^19 POT')
+
+    candidate={}
+    for key in d.keys():
+        spill_id = key.split('-')[0]
+        vertex_id = key.split('-')[1]
+        temp=(spill_id, vertex_id)
+        if temp in cp_length.keys():
+            if cp_length[temp]>threshold:
+                if d[key]['end_pt_loc'] not in candidate.keys():
+                    candidate[d[key]['end_pt_loc']]=[]
+                candidate[d[key]['end_pt_loc']].append(d[key]['mom'])
+                    
+                background_dict[temp]=dict(
+                    nu_energy=d[key]['nu_energy'],
+                    q2=d[key]['q2'],
+                    mom=d[key]['mom'],
+                    ang=d[key]['ang'],
+                    vtx_x=d[key]['vtx_x'],
+                    vtx_y=d[key]['vtx_y'],
+                    vtx_z=d[key]['vtx_z']
+                    )
 
     bins=np.linspace(0,200,41)
     fig, ax = plt.subplots(figsize=(6,6))
@@ -61,10 +82,12 @@ def charged_pion_threshold(d, threshold, scale_factor):
                 cumulative=True, density=True, linestyle='solid', color='r')
     axtwin.set_ylabel('Cumulative Probability')
 
-    ax.text(115,2250,r'NuMI ME RHC 2.5$\times$10$^{19}$ POT')
-    ax.text(0,2250,r'$\nu$NC')
+    ax.text(115,1670,r'NuMI ME RHC 2.5$\times$10$^{19}$ POT')
+    ax.text(0,1670,r'$\nu$NC')
 
     plt.savefig('irreducible_nc_beam_bgd.png')
+
+    return background_dict
 
     
 
@@ -72,7 +95,9 @@ def main(nc_json_file, tracking_threshold, n_files_processed):
     f = open(nc_json_file)
     nc_pion_dict=json.load(f)
     scale_factor = files_processed(n_files_processed)
-    charged_pion_threshold(nc_pion_dict, tracking_threshold, scale_factor)
+    bgd_dict = charged_pion_threshold(nc_pion_dict, tracking_threshold, \
+                                      scale_factor)
+    auxiliary.save_dict_to_json(bgd_dict, 'nc_pid_bkg_dict', True)
     
 
 

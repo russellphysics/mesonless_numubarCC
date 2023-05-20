@@ -12,7 +12,8 @@ def files_processed(processed_files, total_files=1023, \
 
 
 def plot_stacked_histo(signal, signal_factor, wrong_sign, wrong_sign_factor, \
-                       cc_threshold, cc_threshold_factor, dirt, dirt_factor, \
+                       cc_threshold, cc_threshold_factor, \
+                       nc_pid, nc_pid_factor, dirt, dirt_factor, \
                        metric, bins, xlabel, ylabel, figname, leg_location, \
                        xlim,yscale):
     fig, ax = plt.subplots(figsize=(6,6))
@@ -21,24 +22,35 @@ def plot_stacked_histo(signal, signal_factor, wrong_sign, wrong_sign_factor, \
     w = [wrong_sign[key][metric]/1e3 for key in wrong_sign.keys()]
     d = [dirt[key][metric]/1e3 for key in dirt.keys()]
     t = [cc_threshold[key][metric]/1e3 for key in cc_threshold.keys()]
+    p = [nc_pid[key][metric]/1e3 for key in nc_pid.keys()]
     if metric=='q2':
         s = [signal[key][metric]/1e6 for key in signal.keys()]
         w = [wrong_sign[key][metric]/1e6 for key in wrong_sign.keys()]
         d = [dirt[key][metric]/1e6 for key in dirt.keys()]
         t = [cc_threshold[key][metric]/1e6 for key in cc_threshold.keys()]
+        p = [nc_pid[key][metric]/1e6 for key in nc_pid.keys()]        
         
     s_weight = [signal_factor]*len(s)
     w_weight = [wrong_sign_factor]*len(w)
     d_weight = [dirt_factor]*len(d)
     t_weight = [cc_threshold_factor]*len(t)
+    p_weight = [nc_pid_factor]*len(p)
 
-    ax.hist(s, bins=bins, weights=s_weight, stacked=True, \
+    print('signal: ',len(s)*signal_factor,'\n',
+          'wrong sign background: ',len(w)*wrong_sign_factor,'\n',
+          'dirt background: ',len(d)*dirt_factor,'\n',
+          'threshold background: ',len(t)*cc_threshold_factor,'\n',
+          'pid background: ',len(p)*nc_pid_factor)
+
+    ax.hist(s, bins=bins, weights=s_weight, stacked=True, histtype='bar',\
             label=r'mesonless $\bar{\nu}_\mu$ CC')
-    ax.hist(w, bins=bins, weights=w_weight,  stacked=True, \
+    ax.hist(p, bins=bins, weights=p_weight,  stacked=True, histtype='bar',\
+            label=r'$\nu$NC pid backgrounds')
+    ax.hist(w, bins=bins, weights=w_weight,  stacked=True, histtype='bar',\
             label=r'mesonless $\nu_\mu$ CC')
-    ax.hist(t, bins=bins, weights=t_weight,  stacked=True, \
+    ax.hist(t, bins=bins, weights=t_weight,  stacked=True, histtype='bar',\
             label=r'$\nu$CC threshold backgrounds')
-    ax.hist(d, bins=bins, weights=d_weight,  stacked=True, \
+    ax.hist(d, bins=bins, weights=d_weight,  stacked=True, histtype='bar',\
             label=r'dirt backgrounds')
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
@@ -68,46 +80,51 @@ def main(signal, n_signal, wrong_sign, n_wrong_sign, dirt, n_dirt, \
     cc_threshold_dict=json.load(f)
     cc_threshold_sf = files_processed(n_cc_threshold)
 
-#    f = open(nc_pid)
-#    nc_pid_dict=json.load(f)
-#    nc_pid_sf = files_processed(n_nc_pid)                     
+    f = open(nc_pid)
+    nc_pid_dict=json.load(f)
+    nc_pid_sf = files_processed(n_nc_pid)                     
 
     plot_stacked_histo(signal_dict, signal_sf, \
                        wrong_sign_dict, wrong_sign_sf, \
                        cc_threshold_dict, cc_threshold_sf, \
+                       nc_pid_dict, nc_pid_sf, \
                        dirt_dict, dirt_sf, \
-                       'nu_energy', np.linspace(0,10,51), \
-                       r'$\nu$ Energy [GeV]', r'$\nu$ Interactions / 200 MeV',\
-                       'stacked_nu_energy', 'upper right',(0,10),'linear')
+                       'nu_energy', np.linspace(0,10,21), \
+                       r'$\nu$ Energy [GeV]', r'$\nu$ Interactions / 500 MeV',\
+                       'stacked_nu_energy', 'center right',(0,10),'linear')
 
     plot_stacked_histo(signal_dict, signal_sf, \
                        wrong_sign_dict, wrong_sign_sf, \
                        cc_threshold_dict, cc_threshold_sf, \
+                       nc_pid_dict, nc_pid_sf, \
                        dirt_dict, dirt_sf, \
-                       'q2', np.linspace(0,10,51), \
-                       r'$Q^2$ [GeV$^2$]', r'$\nu$ Interactions / 200 MeV',\
-                       'stacked_q2', 'upper right',(0,10),'linear')
+                       'q2', np.linspace(0,5,26), \
+                       r'$Q^2$ [GeV$^2$]', r'$\nu$ Interactions / 200 MeV$^2$',\
+                       'stacked_q2', 'upper right',(0,5),'linear')
 
     plot_stacked_histo(signal_dict, signal_sf, \
                        wrong_sign_dict, wrong_sign_sf, \
                        cc_threshold_dict, cc_threshold_sf, \
+                       nc_pid_dict, nc_pid_sf, \
                        dirt_dict, dirt_sf, \
-                       'mom', np.linspace(0,10,51), \
+                       'mom', np.linspace(0,10,21), \
                        r'Muon Candidate Momentum [GeV/c]', \
-                       r'$\nu$ Interactions / 200 MeV/c',\
-                       'stacked_mu_momentum', 'upper right',(0,10),'linear')
+                       r'$\nu$ Interactions / 500 MeV/c',\
+                       'stacked_mu_momentum', 'center right',(0,10),'linear')
 
     plot_stacked_histo(signal_dict, signal_sf, \
                        wrong_sign_dict, wrong_sign_sf, \
                        cc_threshold_dict, cc_threshold_sf, \
+                       nc_pid_dict, nc_pid_sf, \
                        dirt_dict, dirt_sf, \
-                       'ang', np.linspace(0,np.pi,51), \
-                       r'$\theta_\mu$ [radians]', r'$\nu$ Interactions',\
-                       'stacked_mu_angle', 'upper right',(0,np.pi),'linear')
+                       'ang', np.linspace(-0.45,0.75,61), \
+                       r'$\theta_\mu$ [radians]', r'$\nu$ Interactions / 0.02 radians',\
+                       'stacked_mu_angle', 'upper right',(-0.45,0.75),'linear')
 
     plot_stacked_histo(signal_dict, signal_sf, \
                        wrong_sign_dict, wrong_sign_sf, \
                        cc_threshold_dict, cc_threshold_sf, \
+                       nc_pid_dict, nc_pid_sf, \
                        dirt_dict, dirt_sf, \
                        'vtx_x', np.linspace(-600,600,51), \
                        r'$\nu$ Vertex X Position [cm]', r'$\nu$ Interactions',\
@@ -116,6 +133,7 @@ def main(signal, n_signal, wrong_sign, n_wrong_sign, dirt, n_dirt, \
     plot_stacked_histo(signal_dict, signal_sf, \
                        wrong_sign_dict, wrong_sign_sf, \
                        cc_threshold_dict, cc_threshold_sf, \
+                       nc_pid_dict, nc_pid_sf, \
                        dirt_dict, dirt_sf, \
                        'vtx_y', np.linspace(-500,500,51), \
                        r'$\nu$ Vertex Y Position [cm]', r'$\nu$ Interactions',\
@@ -124,6 +142,7 @@ def main(signal, n_signal, wrong_sign, n_wrong_sign, dirt, n_dirt, \
     plot_stacked_histo(signal_dict, signal_sf, \
                        wrong_sign_dict, wrong_sign_sf, \
                        cc_threshold_dict, cc_threshold_sf, \
+                       nc_pid_dict, nc_pid_sf, \
                        dirt_dict, dirt_sf, \
                        'vtx_z', np.linspace(-2000,1000,51), \
                        r'$\nu$ Vertex Z Position [cm]', r'$\nu$ Interactions',\
