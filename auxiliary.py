@@ -3,7 +3,7 @@ import numpy as np
 import json
 
 neutral_pdg=[111] #, 22] #, 2112] # add K0, rho0, eta0?
-meson_pdg={111,211,-211,130,310,311,321,-321,221,331,421,411,-411}
+meson_pdg={111,211,-211,130,310,311,321,-321,221,331,421,-421,411,-411, 431,-431}
 nu_signal_pdg=-14
 
 hadron_pdg_dict ={2112:'n',
@@ -116,6 +116,23 @@ def wrong_sign_nu_pdg(ghdr, vert_id):
     if ghdr_nu_interaction[0]== -1*nu_signal_pdg: return True
     else: return False
 
+def nu_int_type(ghdr, vert_id):
+    ghdr_vert_mask = ghdr['vertexID']==vert_id
+    ghdr_nu_interaction = ghdr[ghdr_vert_mask]
+    int_type = ''
+    if ghdr_nu_interaction['isQES'] == True:
+        int_type = 'QES'
+    elif ghdr_nu_interaction['isMEC'] == True:
+        int_type = 'MEC'
+    elif ghdr_nu_interaction['isRES'] == True:
+        int_type = 'RES'
+    elif ghdr_nu_interaction['isDIS'] == True:
+        int_type = 'DIS'
+    elif ghdr_nu_interaction['isCOH'] == True:
+        int_type = 'COH'
+    else:
+        int_type = 'UND'
+    return int_type
 
     
 ##### FIND PARENT PDG --------------------------------------

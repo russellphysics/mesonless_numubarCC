@@ -16,8 +16,8 @@ def main(sim_dir, input_type, file_limit):
     test_count = 0
 
     ### NOTE: Current POT scaling is based on MiniRun3 larnd file situation
-    if int(file_limit) < 1000.: 
-        scale_factor = (1./(int(file_limit)/1000.))*2.5
+    if int(file_limit) < 1022.: 
+        scale_factor = (1./(int(file_limit)/1022.))*2.5
     else:
         scale_factor = 2.5
 
@@ -44,7 +44,7 @@ def main(sim_dir, input_type, file_limit):
         test_count+=1
 
         if (test_count % 5 == 0):
-            print("Processing file: ", str(test_count))
+            print("Processing file: ", str(test_count), "/", str(file_limit))
 
         sim_h5 = h5py.File(sim_file,'r')
 
@@ -76,20 +76,12 @@ def main(sim_dir, input_type, file_limit):
                 ##### REQUIRE: (A) nu_mu_bar, (B) CC, (C) NO pions present, (D) final state particle start point in FV
                 if nu_mu_bar==True and is_cc==True and mesonless==True and fv_particle_origin==True:
                     sig_char.muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon_dict, wrong_sign=False)
-                    sig_char.hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, hadron_dict)
+                    sig_char.hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, hadron_dict, wrong_sign=False)
                     sig_char.get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, signal_dict)
                 elif nu_mu==True and is_cc==True and mesonless==True and fv_particle_origin==True:
                     sig_char.muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, ws_muon_dict, wrong_sign=True)
-                    sig_char.hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, ws_hadron_dict)
+                    sig_char.hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, ws_hadron_dict, wrong_sign=True)
                     sig_char.get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, wrong_sign_bkg_dict)
-
-    # PLOT: Signal Event Info      
-    plot_muons(muon_dict, scale_factor, sig_bkg = 0)
-    plot_hadrons(hadron_dict, scale_factor, sig_bkg = 0)
-
-    # PLOT: Wrong Sign Background Event Info   
-    plot_muons(ws_muon_dict, scale_factor, sig_bkg = 3)
-    plot_hadrons(ws_hadron_dict, scale_factor, sig_bkg = 3)
 
     auxiliary.save_dict_to_json(signal_dict, "signal_dict", True)
     auxiliary.save_dict_to_json(wrong_sign_bkg_dict, "wrong_sign_bkg_dict", True)
@@ -103,6 +95,14 @@ def main(sim_dir, input_type, file_limit):
                         "Wrong Sign Background Events (scaled to 2.5e19 POT): "+str(wrong_sign_bkg_count)+"\n", \
                         "Number of files used to get count: "+str(file_limit)+"\n"])
     outfile.close()
+
+    # PLOT: Signal Event Info      
+    plot_muons(muon_dict, scale_factor, sig_bkg = 0)
+    plot_hadrons(hadron_dict, scale_factor, sig_bkg = 0)
+
+    # PLOT: Wrong Sign Background Event Info   
+    plot_muons(ws_muon_dict, scale_factor, sig_bkg = 3)
+    plot_hadrons(ws_hadron_dict, scale_factor, sig_bkg = 3)
 
 
 if __name__=='__main__':
