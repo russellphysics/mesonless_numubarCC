@@ -11,13 +11,13 @@ import signal_characterization as sig_char
 from plot_signal_muons import plot_muons
 from plot_signal_hadrons import plot_hadrons
 
-def main(sim_dir, input_type, file_limit):
+def main(sim_dir, input_type, n_files_processed):
 
     test_count = 0
 
     ### NOTE: Current POT scaling is based on MiniRun3 larnd file situation
-    if int(file_limit) < 1022.: 
-        scale_factor = (1./(int(file_limit)/1022.))*2.5
+    if int(n_files_processed) < 1023.: 
+        scale_factor = (1./(int(n_files_processed)/1023.))*2.5
     else:
         scale_factor = 2.5
 
@@ -38,13 +38,13 @@ def main(sim_dir, input_type, file_limit):
     elif input_type == 'edep':
         file_ext = '.EDEPSIM.h5'
 
-    for sim_file in glob.glob(sim_dir+'/*'+file_ext):
+    for sim_file in glob.glob(sim_dir+'/*'+file_ext): # Loop over simulation files
 
-        if test_count ==int(file_limit) : break
+        if test_count ==int(n_files_processed) : break
         test_count+=1
 
         if (test_count % 5 == 0):
-            print("Processing file: ", str(test_count), "/", str(file_limit))
+            print("Processing file: ", str(test_count), "/", str(n_files_processed))
 
         sim_h5 = h5py.File(sim_file,'r')
 
@@ -57,13 +57,11 @@ def main(sim_dir, input_type, file_limit):
             ### partition by vertex ID within beam spill
             for v_i in range(len(vert['vertexID'])):
 
-                vert_pos= [vert['x_vert'][v_i], vert['y_vert'][v_i], vert['z_vert'][v_i]]
-                vert_in_active_LAr = twoBytwo_defs.fiducialized_vertex( vert_pos )
+                vert_pos= [vert['x_vert'][v_i], vert['y_vert'][v_i], vert['z_vert'][v_i]] 
+                vert_in_active_LAr = twoBytwo_defs.fiducialized_vertex( vert_pos ) # Check vertex location relative to FV
 
                 ##### REQUIRE: neutrino vertex in LAr active volume #####
                 if vert_in_active_LAr==False: continue
-
-                #print('Vertex in active LAr.')
 
                 vert_id = vert['vertexID'][v_i]
 
@@ -73,27 +71,33 @@ def main(sim_dir, input_type, file_limit):
                 mesonless = auxiliary.signal_meson_status(gstack, vert_id)
                 fv_particle_origin=twoBytwo_defs.fiducialized_particle_origin(traj, vert_id)
 
-                ##### REQUIRE: (A) nu_mu_bar, (B) CC, (C) NO pions present, (D) final state particle start point in FV
+                ### REQUIRE: (A) nu_mu_bar, (B) CC interaction, (C) NO final state mesons, (D) final state particle start point in FV
                 if nu_mu_bar==True and is_cc==True and mesonless==True and fv_particle_origin==True:
                     sig_char.muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon_dict, wrong_sign=False)
                     sig_char.hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, hadron_dict, wrong_sign=False)
                     sig_char.get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, signal_dict)
+                ### REQUIRE: (A) nu_mu, (B) CC interaction, (C) NO final state mesons, (D) final state particle start point in FV
                 elif nu_mu==True and is_cc==True and mesonless==True and fv_particle_origin==True:
                     sig_char.muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, ws_muon_dict, wrong_sign=True)
                     sig_char.hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, ws_hadron_dict, wrong_sign=True)
                     sig_char.get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, wrong_sign_bkg_dict)
 
+    # Save all Python dictionaries to JSON files
     auxiliary.save_dict_to_json(signal_dict, "signal_dict", True)
     auxiliary.save_dict_to_json(wrong_sign_bkg_dict, "wrong_sign_bkg_dict", True)
     auxiliary.save_dict_to_json(muon_dict, "muon_dict", True)
-    #auxiliary.save_dict_to_json(hadron_dict, "hadron_dict", True) # TODO: Make Hadron Dict saveable
+    auxiliary.save_dict_to_json(hadron_dict, "hadron_dict", True)
+    auxiliary.save_dict_to_json(ws_muon_dict, "ws_muon_dict", True)
+    auxiliary.save_dict_to_json(ws_hadron_dict, "ws_hadron_dict", True) 
 
+    # Save full signal and w.s. bkg counts to TXT file
     signal_count = len(signal_dict)*scale_factor
     wrong_sign_bkg_count = len(wrong_sign_bkg_dict)*scale_factor
     outfile = open('signal_wrong_sign_bkg_event_counts.txt', "w")
     outfile.writelines(["Signal Events (scaled to 2.5e19 POT): "+str(signal_count)+"\n", \
                         "Wrong Sign Background Events (scaled to 2.5e19 POT): "+str(wrong_sign_bkg_count)+"\n", \
-                        "Number of files used to get count: "+str(file_limit)+"\n"])
+                        "Number of files used to get count: "+str(n_files_processed)+"\n", \
+                        "Scale factor:"+str(scale_factor)+"\n"])
     outfile.close()
 
     # PLOT: Signal Event Info      
@@ -107,9 +111,11 @@ def main(sim_dir, input_type, file_limit):
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--sim_dir', default=None, required=True, type=str, help='''string corresponding to the path of the directory containing edep-sim or larnd ouput simulation file to be considered''')
-    parser.add_argument('-l', '--file_limit', default=None, required=True, type=str, help='''int corresponding to the maximum number of edep-sim or larnd ouput simulation files to be considered''')
-    #parser.add_argument('-f', '--sim_file', default=None, required=False, type=str, help='''string corresponding to the path of the edep-sim ouput simulation file to be considered''')
-    parser.add_argument('-t', '--input_type', default='larnd', choices=['edep', 'larnd'], type=str, help='''string corresponding to the output file type: edep or larnd''')
+    parser.add_argument('-d', '--sim_dir', default=None, required=True, type=str, \
+                        help='''string corresponding to the path of the directory containing edep-sim or larnd ouput simulation file to be considered''')
+    parser.add_argument('-t', '--input_type', default='larnd', choices=['edep', 'larnd'], type=str, \
+                        help='''string corresponding to the output file type: edep or larnd''')
+    parser.add_argument('-n', '--n_files_processed', default=1, required=True, type=int, \
+                        help='''File count of number of files processed in production sample''')
     args = parser.parse_args()
     main(**vars(args))
