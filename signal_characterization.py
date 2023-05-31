@@ -48,6 +48,7 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
     ang = truth_level_summ['lep_ang'] *np.pi / 180. # Save truth-level muon angle with beam
     nu_energy = truth_level_summ['Enu'] # Save truth-level neutrino energy
     q2 = truth_level_summ['Q2'] # Save truth-level interaction 4-momentum squared
+    nu_int_type = auxiliary.nu_int_type(ghdr, vert_id) # Save type of neutrino interaction
 
     total_edep=0.; contained_edep=0.; total_length=0.; contained_length=0.
     #print("PDG IDs of F.S. Particles:", final_states['pdgId'])
@@ -96,11 +97,12 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
         ang=float(ang),
         nu_energy=float(nu_energy),
         q2 = float(q2),
-        end_pt_loc = str(end_pt_loc))
+        end_pt_loc = str(end_pt_loc),
+        nu_int_type=str(nu_int_type))
     return
 
 
-def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, hadron_dict):
+def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, hadron_dict, wrong_sign):
         
     traj_vert_mask = traj['vertexID']==vert_id
     final_states = traj[traj_vert_mask]
@@ -164,7 +166,8 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, ha
                 proton_contained_length+=auxiliary.fv_edep_charged_length(tid, traj, seg)
                 proton_total_length+=auxiliary.total_edep_charged_length(tid, traj, seg)
 
-        if proton_contained_length > max_proton_contained_length:
+        if fs['pdgId'] == 2212 and proton_contained_length > max_proton_contained_length and \
+            auxiliary.is_primary_particle(track_id_set, final_states, traj, ghdr, wrong_sign):
             max_proton_contained_length = proton_contained_length
             max_proton_total_length = proton_total_length
     
