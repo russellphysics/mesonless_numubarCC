@@ -4,7 +4,7 @@ import json
 
 neutral_pdg=[111] #, 22] #, 2112] # add K0, rho0, eta0?
 meson_pdg={111,211,-211,130,310,311,321,-321,221,331,421,-421,411,-411, 431,-431}
-nu_signal_pdg=-14
+nu_mu_pdg=14
 
 hadron_pdg_dict ={2112:'n',
                   2212:'p',
@@ -94,7 +94,7 @@ def save_dict_to_json(d, name, if_tuple):
 def signal_nu_pdg(ghdr, vert_id):
     ghdr_vert_mask = ghdr['vertexID']==vert_id
     ghdr_nu_interaction = ghdr[ghdr_vert_mask]['nu_pdg']
-    if ghdr_nu_interaction[0]==nu_signal_pdg: return True
+    if abs(ghdr_nu_interaction[0])==nu_mu_pdg: return True
     else: return False
 
 
@@ -102,18 +102,10 @@ def signal_cc(ghdr, vert_id):
     ghdr_vert_mask = ghdr['vertexID']==vert_id
     return ghdr[ghdr_vert_mask]['isCC'][0]
 
-
-
 def signal_meson_status(gstack, vert_id):
     gstack_vert_mask = gstack['vertexID']==vert_id
     gstack_pdg_set = set(gstack[gstack_vert_mask]['part_pdg'])
     if len(meson_pdg.intersection(gstack_pdg_set))==0: return True
-    else: return False
-
-def wrong_sign_nu_pdg(ghdr, vert_id):
-    ghdr_vert_mask = ghdr['vertexID']==vert_id
-    ghdr_nu_interaction = ghdr[ghdr_vert_mask]['nu_pdg']
-    if ghdr_nu_interaction[0]== -1*nu_signal_pdg: return True
     else: return False
 
 def nu_int_type(ghdr, vert_id):
@@ -184,7 +176,7 @@ def same_pdg_connected_trajectories(track_pdg, track_id, vertex_assoc_traj,\
     return trackid_set
     
 
-def is_primary_particle(trackid_set, vertex_assoc_traj,traj, ghdr, wrong_sign):
+def is_primary_particle(trackid_set, vertex_assoc_traj,traj, ghdr):
     is_prim = False
 
     for tid in trackid_set:
@@ -194,10 +186,7 @@ def is_primary_particle(trackid_set, vertex_assoc_traj,traj, ghdr, wrong_sign):
                                      vertex_assoc_traj[particle_mask]['vertexID'],
                                      traj, ghdr)
         #print("Parent PDG:", parent_pdg)
-        if wrong_sign==False and parent_pdg==-14:
-            is_prim = True
-            break
-        if wrong_sign==True and parent_pdg==14:
+        if abs(parent_pdg)==14:
             is_prim = True
             break
         else: continue

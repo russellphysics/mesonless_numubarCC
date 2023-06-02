@@ -25,9 +25,6 @@ def plot_hadrons(d, scale_factor, sig_bkg = 0):
     elif sig_bkg == 2:
         sample_type = 'beam_bkg'
         sample_title = 'Beam Background'
-    elif sig_bkg == 3:
-        sample_type = 'wrong_sign_bkg'
-        sample_title = 'Wrong Sign Background'
     else: 
         return "Error: plot_hadrons function given undefined signal/background definition"
     

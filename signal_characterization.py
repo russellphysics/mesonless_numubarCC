@@ -10,8 +10,8 @@ characterizing certain backgrounds as well.
 
 INCLUDED METHODS:
  - get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, seg, signal_dict)
- - muon_characterization(spill_id, vert_id, ghdr, gstack, traj, seg, muon_dict, wrong_sign)
- - hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, seg, hadron_dict, wrong_sign)
+ - muon_characterization(spill_id, vert_id, ghdr, gstack, traj, seg, muon_dict)
+ - hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, seg, hadron_dict)
  '''
 
 
@@ -19,8 +19,8 @@ INCLUDED METHODS:
              and 
     Inputs : Spill ID (INT), Vertex ID (INT), genie_hdr dataset (HDF5 DATASET), 
              genie_stack dataset (HDF5 DATASET), edep-sim trajectories dataset (HDF5 DATASET), 
-             vertex dataset (HDF5 DATASET), edep-sim segements dataset (HDF5 DATASET), empty Python dictionary (DICT), 
-             signifier of looking for right sign nu_mu_bar vertices or wrong sign nu_mu vertices (BOOL)
+             vertex dataset (HDF5 DATASET), edep-sim segements dataset (HDF5 DATASET), 
+             empty Python dictionary (DICT)
     Outputs: Nothing returned, but signal_dict (DICT) is full after
              method runs'''
 def get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, signal_dict):
@@ -52,11 +52,11 @@ def get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, signal_dict
              related to FS muon
     Inputs : Spill ID (INT), Vertex ID (INT), genie_hdr dataset (HDF5 DATASET), 
              genie_stack dataset (HDF5 DATASET), edep-sim trajectories dataset (HDF5 DATASET), 
-             vertex dataset (HDF5 DATASET), edep-sim segements dataset (HDF5 DATASET), empty Python dictionary (DICT), 
-             signifier of looking for right sign nu_mu_bar vertices or wrong sign nu_mu vertices (BOOL)
+             vertex dataset (HDF5 DATASET), edep-sim segements dataset (HDF5 DATASET), 
+             empty Python dictionary (DICT)
     Outputs: Nothing returned, but muon_dict (DICT) is full after
              method runs'''
-def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon_dict, wrong_sign):
+def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon_dict):
 
     traj_vert_mask = traj['vertexID']==vert_id 
     final_states = traj[traj_vert_mask] # Get trajectories associated with vertex
@@ -80,8 +80,7 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
     for fs in final_states:
 
         # Choose nu_mu_bar or nu_mu vertices
-        if wrong_sign==False and (fs['pdgId'] != -13): continue
-        elif wrong_sign==True and (fs['pdgId'] != 13): continue
+        if (abs(fs['pdgId']) != 13): continue
         
         track_id = fs['trackID']
         if track_id in exclude_track_ids: continue
@@ -92,7 +91,7 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
         track_id_set = auxiliary.same_pdg_connected_trajectories(pdg, track_id, final_states, traj, ghdr)
         exclude_track_ids.update(track_id_set) # Exclude track IDs associated with same particle from future counting
 
-        is_primary = auxiliary.is_primary_particle(track_id_set, final_states, traj, ghdr, wrong_sign) 
+        is_primary = auxiliary.is_primary_particle(track_id_set, final_states, traj, ghdr) 
 
         if is_primary == False: continue # Only look at final state particles
         for tid in track_id_set:
@@ -130,11 +129,11 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
              related to hadrons 
     Inputs : Spill ID (INT), Vertex ID (INT), genie_hdr dataset (HDF5 DATASET), 
              genie_stack dataset (HDF5 DATASET), edep-sim trajectories dataset (HDF5 DATASET), 
-             vertex dataset (HDF5 DATASET), edep-sim segements dataset (HDF5 DATASET), empty Python dictionary (DICT), 
-             signifier of looking for right sign nu_mu_bar vertices or wrong sign nu_mu vertices (BOOL)
+             vertex dataset (HDF5 DATASET), edep-sim segements dataset (HDF5 DATASET), 
+             empty Python dictionary (DICT)
     Outputs: Nothing returned, but hadron_dict (DICT) is full after
              method runs'''
-def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, hadron_dict, wrong_sign):
+def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, hadron_dict):
         
     traj_vert_mask = traj['vertexID']==vert_id
     final_states = traj[traj_vert_mask] # Trajectories associated with vertex
@@ -198,7 +197,7 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, ha
                 proton_total_length+=auxiliary.total_edep_charged_length(tid, traj, seg)
 
         if fs['pdgId'] == 2212 and proton_contained_length > max_proton_contained_length and \
-            auxiliary.is_primary_particle(track_id_set, final_states, traj, ghdr, wrong_sign):
+            auxiliary.is_primary_particle(track_id_set, final_states, traj, ghdr):
             max_proton_contained_length = proton_contained_length # Update max contained proton length in vertex
             max_proton_total_length = proton_total_length # Update max total proton length in vertex
 
