@@ -14,6 +14,7 @@ loc_dict={'o':'Outside Active Volume',
           '6':'TPC 6',
           '7':'TPC 7'}
 
+# NOTE: not all possibilities have been considered for bkg e.g. for backwards tracks
 particle_end_loc_dict = {'f':'Stops in LAr Fiducial Volume',
                          'd':r'Stops in MINER$\nu$A Downstream',
                          'b':r'Exits back of MINER$\nu$A Downstream',

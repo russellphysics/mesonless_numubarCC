@@ -24,12 +24,8 @@ def main(sim_dir, input_type, n_files_processed):
     muon_dict = dict() # Initialize muon dictionary
     hadron_dict = dict() # Initialize hadron dictionary
 
-    ws_muon_dict = dict() # Initialize wrong sign muon dictionary
-    ws_hadron_dict = dict() # Initialize wrong sign hadron dictionary
-    
     # Dictionaries for combining with other background explorations
     signal_dict = dict() # Initialize dictionary for signal muons for full comparison
-    wrong_sign_bkg_dict = dict() # Initialize dictionary for wrong sign bkg muons for full comparison
     
     file_ext = '' ## Changes based on input type
 
@@ -65,37 +61,26 @@ def main(sim_dir, input_type, n_files_processed):
 
                 vert_id = vert['vertexID'][v_i]
 
-                nu_mu_bar = auxiliary.signal_nu_pdg(ghdr, vert_id)
-                nu_mu = auxiliary.wrong_sign_nu_pdg(ghdr, vert_id)
+                nu_mu = auxiliary.signal_nu_pdg(ghdr, vert_id) # nu_mu OR nu_mu_bar
                 is_cc = auxiliary.signal_cc(ghdr, vert_id)
                 mesonless = auxiliary.signal_meson_status(gstack, vert_id)
                 fv_particle_origin=twoBytwo_defs.fiducialized_particle_origin(traj, vert_id)
 
-                ### REQUIRE: (A) nu_mu_bar, (B) CC interaction, (C) NO final state mesons, (D) final state particle start point in FV
-                if nu_mu_bar==True and is_cc==True and mesonless==True and fv_particle_origin==True:
-                    sig_char.muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon_dict, wrong_sign=False)
-                    sig_char.hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, hadron_dict, wrong_sign=False)
+                ### REQUIRE: (A) nu_mu(_bar), (B) CC interaction, (C) NO final state mesons, (D) final state particle start point in FV
+                if nu_mu==True and is_cc==True and mesonless==True and fv_particle_origin==True:
+                    sig_char.muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon_dict)
+                    sig_char.hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, auxiliary.threshold, hadron_dict)
                     sig_char.get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, signal_dict)
-                ### REQUIRE: (A) nu_mu, (B) CC interaction, (C) NO final state mesons, (D) final state particle start point in FV
-                elif nu_mu==True and is_cc==True and mesonless==True and fv_particle_origin==True:
-                    sig_char.muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, ws_muon_dict, wrong_sign=True)
-                    sig_char.hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, ws_hadron_dict, wrong_sign=True)
-                    sig_char.get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, wrong_sign_bkg_dict)
 
     # Save all Python dictionaries to JSON files
     auxiliary.save_dict_to_json(signal_dict, "signal_dict", True)
-    auxiliary.save_dict_to_json(wrong_sign_bkg_dict, "wrong_sign_bkg_dict", True)
     auxiliary.save_dict_to_json(muon_dict, "muon_dict", True)
     auxiliary.save_dict_to_json(hadron_dict, "hadron_dict", True)
-    auxiliary.save_dict_to_json(ws_muon_dict, "ws_muon_dict", True)
-    auxiliary.save_dict_to_json(ws_hadron_dict, "ws_hadron_dict", True) 
 
     # Save full signal and w.s. bkg counts to TXT file
     signal_count = len(signal_dict)*scale_factor
-    wrong_sign_bkg_count = len(wrong_sign_bkg_dict)*scale_factor
-    outfile = open('signal_wrong_sign_bkg_event_counts.txt', "w")
+    outfile = open('signal_event_counts.txt', "w")
     outfile.writelines(["Signal Events (scaled to 2.5e19 POT): "+str(signal_count)+"\n", \
-                        "Wrong Sign Background Events (scaled to 2.5e19 POT): "+str(wrong_sign_bkg_count)+"\n", \
                         "Number of files used to get count: "+str(n_files_processed)+"\n", \
                         "Scale factor:"+str(scale_factor)+"\n"])
     outfile.close()
@@ -103,10 +88,6 @@ def main(sim_dir, input_type, n_files_processed):
     # PLOT: Signal Event Info      
     plot_muons(muon_dict, scale_factor, sig_bkg = 0)
     plot_hadrons(hadron_dict, scale_factor, sig_bkg = 0)
-
-    # PLOT: Wrong Sign Background Event Info   
-    plot_muons(ws_muon_dict, scale_factor, sig_bkg = 3)
-    plot_hadrons(ws_hadron_dict, scale_factor, sig_bkg = 3)
 
 
 if __name__=='__main__':

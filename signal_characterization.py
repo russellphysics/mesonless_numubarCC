@@ -4,14 +4,17 @@ import twoBytwo_defs
 import numpy as np
 import auxiliary
 
+''' TO DO: Add other hadron mult over threshold? '''
+
+
 '''
 NOTE: While script is labelled as 'signal' characterization, methods can be used for
 characterizing certain backgrounds as well.
 
 INCLUDED METHODS:
  - get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, seg, signal_dict)
- - muon_characterization(spill_id, vert_id, ghdr, gstack, traj, seg, muon_dict, wrong_sign)
- - hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, seg, hadron_dict, wrong_sign)
+ - muon_characterization(spill_id, vert_id, ghdr, gstack, traj, seg, muon_dict)
+ - hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, seg, hadron_dict)
  '''
 
 
@@ -19,8 +22,8 @@ INCLUDED METHODS:
              and 
     Inputs : Spill ID (INT), Vertex ID (INT), genie_hdr dataset (HDF5 DATASET), 
              genie_stack dataset (HDF5 DATASET), edep-sim trajectories dataset (HDF5 DATASET), 
-             vertex dataset (HDF5 DATASET), edep-sim segements dataset (HDF5 DATASET), empty Python dictionary (DICT), 
-             signifier of looking for right sign nu_mu_bar vertices or wrong sign nu_mu vertices (BOOL)
+             vertex dataset (HDF5 DATASET), edep-sim segements dataset (HDF5 DATASET), 
+             empty Python dictionary (DICT)
     Outputs: Nothing returned, but signal_dict (DICT) is full after
              method runs'''
 def get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, signal_dict):
@@ -52,11 +55,11 @@ def get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, signal_dict
              related to FS muon
     Inputs : Spill ID (INT), Vertex ID (INT), genie_hdr dataset (HDF5 DATASET), 
              genie_stack dataset (HDF5 DATASET), edep-sim trajectories dataset (HDF5 DATASET), 
-             vertex dataset (HDF5 DATASET), edep-sim segements dataset (HDF5 DATASET), empty Python dictionary (DICT), 
-             signifier of looking for right sign nu_mu_bar vertices or wrong sign nu_mu vertices (BOOL)
+             vertex dataset (HDF5 DATASET), edep-sim segements dataset (HDF5 DATASET), 
+             empty Python dictionary (DICT)
     Outputs: Nothing returned, but muon_dict (DICT) is full after
              method runs'''
-def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon_dict, wrong_sign):
+def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon_dict):
 
     traj_vert_mask = traj['vertexID']==vert_id 
     final_states = traj[traj_vert_mask] # Get trajectories associated with vertex
@@ -80,8 +83,7 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
     for fs in final_states:
 
         # Choose nu_mu_bar or nu_mu vertices
-        if wrong_sign==False and (fs['pdgId'] != -13): continue
-        elif wrong_sign==True and (fs['pdgId'] != 13): continue
+        if (abs(fs['pdgId']) != 13): continue
         
         track_id = fs['trackID']
         if track_id in exclude_track_ids: continue
@@ -92,7 +94,7 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
         track_id_set = auxiliary.same_pdg_connected_trajectories(pdg, track_id, final_states, traj, ghdr)
         exclude_track_ids.update(track_id_set) # Exclude track IDs associated with same particle from future counting
 
-        is_primary = auxiliary.is_primary_particle(track_id_set, final_states, traj, ghdr, wrong_sign) 
+        is_primary = auxiliary.is_primary_particle(track_id_set, final_states, traj, ghdr) 
 
         if is_primary == False: continue # Only look at final state particles
         for tid in track_id_set:
@@ -130,12 +132,13 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
              related to hadrons 
     Inputs : Spill ID (INT), Vertex ID (INT), genie_hdr dataset (HDF5 DATASET), 
              genie_stack dataset (HDF5 DATASET), edep-sim trajectories dataset (HDF5 DATASET), 
-             vertex dataset (HDF5 DATASET), edep-sim segements dataset (HDF5 DATASET), empty Python dictionary (DICT), 
-             signifier of looking for right sign nu_mu_bar vertices or wrong sign nu_mu vertices (BOOL)
+             vertex dataset (HDF5 DATASET), edep-sim segements dataset (HDF5 DATASET), threshold length in cm (FLOAT)
+             empty Python dictionary (DICT)
     Outputs: Nothing returned, but hadron_dict (DICT) is full after
              method runs'''
-def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, hadron_dict, wrong_sign):
+def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, threshold, hadron_dict):
         
+    #print("\nHADRONS:")
     traj_vert_mask = traj['vertexID']==vert_id
     final_states = traj[traj_vert_mask] # Trajectories associated with vertex
 
@@ -170,8 +173,12 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, ha
         else:
             other_had_mult+=1
 
-    # Set contained and total track energies and lengths to 0
-    total_edep=0.; contained_edep=0.; total_length=0.; contained_length=0.; max_proton_contained_length=0.; max_proton_total_length=0. 
+    # Set contained and total track energies and lengths to 0; Set hadron + proton multiplicities over threshold to 0.
+    total_edep=0.; contained_edep=0.; total_length=0.; contained_length=0.
+    max_proton_contained_length=0.; max_proton_total_length=0. 
+    lead_proton_ang_wrt_beam=0.; lead_proton_momentum=0.; sub_lead_proton_ang_wrt_beam=0.; sub_lead_proton_momentum=0.
+    lead_proton_traj_at_vertex = 0.; sub_lead_proton_traj_at_vertex = 0.
+    hadron_mult_over_thresh = 0.; p_mult_over_thresh = 0.
     
     exclude_track_ids = set() # Create set of track IDs to exclude to eliminate redundancies
                               # (i.e. if they've been identified as being from the same particle as an earlier track)
@@ -182,25 +189,57 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, ha
         if fs['pdgId'] == 22: continue # No photons
         
         track_id = fs['trackID']
-        if track_id in exclude_track_ids: continue 
+        if track_id in exclude_track_ids: 
+            #print("Excluding a track because it has already been studied.")
+            continue 
 
         track_id_set = auxiliary.same_pdg_connected_trajectories(fs['pdgId'], track_id, final_states, traj, ghdr)
         exclude_track_ids.update(track_id_set) # Exclude track IDs associated with same particle from future counting
+        #if fs['pdgId'] == 2112: print("\nTrack ID Set:", track_id_set)
 
         proton_contained_length = 0.; proton_total_length=0. # Reset proton track lengths
         for tid in track_id_set:
 
             total_edep += auxiliary.total_edep_charged_e(tid,traj,seg) # *** total visible energy ***
             contained_edep+= auxiliary.fv_edep_charged_e(tid, traj, seg)
+
+            contained_length+=auxiliary.fv_edep_charged_length(tid, traj, seg) # *** total contained length for protons ***
+            total_length+=auxiliary.total_edep_charged_length(tid, traj, seg)
             
             if fs['pdgId'] == 2212:
                 proton_contained_length+=auxiliary.fv_edep_charged_length(tid, traj, seg) # *** total contained length for protons ***
                 proton_total_length+=auxiliary.total_edep_charged_length(tid, traj, seg)
 
-        if fs['pdgId'] == 2212 and proton_contained_length > max_proton_contained_length and \
-            auxiliary.is_primary_particle(track_id_set, final_states, traj, ghdr, wrong_sign):
-            max_proton_contained_length = proton_contained_length # Update max contained proton length in vertex
-            max_proton_total_length = proton_total_length # Update max total proton length in vertex
+        if auxiliary.is_primary_particle(track_id_set, final_states, traj, ghdr) and contained_length > threshold \
+            and fs['pdgId'] not in auxiliary.neutral_hadron_pdg_dict.keys():
+            hadron_mult_over_thresh +=1
+            if fs['pdgId'] == 2212: 
+                p_mult_over_thresh += 1
+                p_traj_id_at_vertex = auxiliary.find_trajectory_at_vertex(track_id_set, final_states, traj, ghdr)
+                trackid_at_vertex_mask = final_states['trackID']==p_traj_id_at_vertex
+                p_track_at_vertex = final_states[trackid_at_vertex_mask] 
+                p_mom = np.sqrt(np.sum(p_track_at_vertex['pxyz_start']**2))
+                if p_mom > lead_proton_momentum:
+                    sub_lead_proton_traj_at_vertex = lead_proton_traj_at_vertex
+                    sub_lead_proton_momentum = lead_proton_momentum
+                    sub_lead_proton_ang_wrt_beam = lead_proton_ang_wrt_beam
+
+                    lead_proton_traj_at_vertex = p_traj_id_at_vertex
+                    lead_proton_momentum = p_mom
+                    lead_proton_ang_wrt_beam = auxiliary.angle_wrt_beam_direction(track_id_set, final_states, traj, ghdr)
+                elif p_mom <= lead_proton_momentum and p_mom > sub_lead_proton_momentum:
+                    sub_lead_proton_traj_at_vertex = p_traj_id_at_vertex
+                    sub_lead_proton_momentum = p_mom
+                    sub_lead_proton_ang_wrt_beam = auxiliary.angle_wrt_beam_direction(track_id_set, final_states, traj, ghdr)
+                
+                if proton_contained_length > max_proton_contained_length:
+                    max_proton_contained_length = proton_contained_length # Update max contained proton length in vertex
+                    max_proton_total_length = proton_total_length # Update max total proton length in vertex
+
+    angle_between_lead_and_sublead_protons = 0. # Initialize angle between leading and subleading protons
+    if p_mult_over_thresh >= 2:
+        angle_between_lead_and_sublead_protons = auxiliary.angle_between_two_trajectories(lead_proton_traj_at_vertex, \
+                                                                                          sub_lead_proton_traj_at_vertex, final_states)
 
     # Save collected info in input hadron_dict
     hadron_dict[(spill_id,vert_id)]=dict(
@@ -208,11 +247,18 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, ha
         neutron_mult = int(n_mult),
         proton_mult = int(p_mult),
         other_had_mult = int(other_had_mult),
+        hadron_mult_over_thresh = int(hadron_mult_over_thresh),
+        proton_mult_over_thresh = int(p_mult_over_thresh),
         hadron_pdg = [int(i) for i in gstack_vert_fs_hadrons],
         hadron_pdg_set = [int(i) for i in list(gstack_vert_fs_pdg_set)],
         total_edep=float(total_edep),
         contained_edep=float(contained_edep),
         max_p_total_length=float(max_proton_total_length),
-        max_p_contained_length=float(max_proton_contained_length))
+        max_p_contained_length=float(max_proton_contained_length),
+        lead_proton_momentum = float(lead_proton_momentum), 
+        sub_lead_proton_momentum = float(sub_lead_proton_momentum), 
+        lead_proton_ang_wrt_beam = float(lead_proton_ang_wrt_beam), 
+        sub_lead_proton_ang_wrt_beam = float(sub_lead_proton_ang_wrt_beam),
+        sub_lead_proton_angle_with_lead_proton = float(angle_between_lead_and_sublead_protons))
     return
                                                  
