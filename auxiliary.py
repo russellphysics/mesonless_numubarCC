@@ -17,6 +17,12 @@ hadron_pdg_dict ={2112:'n',
                   4112:r'$\Sigma_c^0$', 
                   4122:r'$\Lambda_c^+$'} 
 
+neutral_hadron_pdg_dict ={2112:'n',
+                          3122:r'$\Lambda$',
+                          3212:r'$\Sigma^0$',
+                          4112:r'$\Sigma_c^0$'} 
+
+threshold = 1.2 # stand-in threshold in cm (~3 pixels)
 
 ##### HDF5 FILE PARSING-------------------------------------
 
@@ -142,36 +148,48 @@ def find_parent_pdg(parent_id, vertex_id, traj, ghdr):
 
 ##### SAME PDG CONNECTED TRAJECTORIES -----------------------
 
-
+# Method to connect trajectories of a single particle which have been assigned 
+# different trackIDs. If a particle scatters or reinteracts in a way such that 
+# multiple child particles are produced, the lineage stops, even if one of those 
+# child particles has the same PDG ID as the original particle. We do this by 
+# ensuring that the original particle/trackID (and any other trackID accepted as 
+# being the same particle) does not have the same parent as any other 
+# particles/trackIDs (is an "only child") and also does not have multiple children.
 def same_pdg_connected_trajectories(track_pdg, track_id, vertex_assoc_traj,\
                                     traj, ghdr):
-    trackid_set = {track_id}
+    trackid_set = {track_id} # initialize a set of trackIDs associated with a single particle
     
-    # walk up the family tree
+    ## WALK UP THE FAMILY TREE
     this_pdg = track_pdg
     this_track_id = track_id
 
-    while this_pdg==track_pdg:
-        particle_mask = vertex_assoc_traj['trackID'] == this_track_id
-        this_pdg = find_parent_pdg(vertex_assoc_traj[particle_mask]['parentID'],
+    while this_pdg==track_pdg: # stop if a member of an older generation has a different PDG ID than the original track/particle
+        particle_mask = vertex_assoc_traj['trackID'] == this_track_id # mask to find trajectories assoc. w/ current track
+        parent_track_id = vertex_assoc_traj[particle_mask]['parentID'] # find parent ID of current track
+        parent_mask = vertex_assoc_traj['parentID'] == parent_track_id # mask to find trajectories w/ current track AS PARENT TRACK
+        this_generation =  vertex_assoc_traj[parent_mask] # find all tracks with the same parent as the current track
+        if len(this_generation) == 1: # only move forward if current track is an "only child"
+            this_pdg = find_parent_pdg(vertex_assoc_traj[particle_mask]['parentID'],
                                    vertex_assoc_traj[particle_mask]['vertexID'],
-                                   traj, ghdr)
-        if this_pdg==track_pdg:
-            this_track_id = vertex_assoc_traj[particle_mask]['parentID'].tolist()[0]
-            trackid_set.add(this_track_id)
+                                   traj, ghdr) # get parent PDG ID of current track
+            if this_pdg==track_pdg: # if parent PDG ID of track matches current/original track's PDG ID, add parent to track id set
+                this_track_id = vertex_assoc_traj[particle_mask]['parentID'].tolist()[0] # also makes parent track the new "current" track
+                trackid_set.add(this_track_id)
+        else: break # break while loop if current track/particle is not an "only child"
 
-    # walk down the family tree
+    ## WALK DOWN THE FAMILY TREE
     this_pdg = track_pdg
     this_track_id = track_id
-    while this_pdg==track_pdg:
-        particle_mask = vertex_assoc_traj['parentID'] == this_track_id
-        child_particle=vertex_assoc_traj[particle_mask]
-        if len(child_particle)==1:
+
+    while this_pdg==track_pdg: # stop if/when a child has a different PDG ID than the original track
+        particle_mask = vertex_assoc_traj['parentID'] == this_track_id  # mask to find trajectories w/ current track AS PARENT TRACK
+        child_particle=vertex_assoc_traj[particle_mask] # find all tracks which are children of the current track
+        if len(child_particle)==1: # only move forward if current track has only one child
             this_pdg = child_particle['pdgId']
-            if child_particle['pdgId']==track_pdg:
-                this_track_id = child_particle['trackID'].tolist()[0]
+            if child_particle['pdgId']==track_pdg: # if the child's PDG ID matches the original track PDG ID, add child track id to set
+                this_track_id = child_particle['trackID'].tolist()[0] # also makes child track the new "current" track
                 trackid_set.add(this_track_id)
-        else: break
+        else: break # break while loop if current track/particle has more than one child particle
 
     return trackid_set
     
@@ -192,6 +210,93 @@ def is_primary_particle(trackid_set, vertex_assoc_traj,traj, ghdr):
         else: continue
 
     return is_prim
+
+
+def find_trajectory_at_vertex(trackid_set, vertex_assoc_traj,traj, ghdr):
+    
+    is_prim = is_primary_particle(trackid_set, vertex_assoc_traj,traj, ghdr)
+
+    if is_prim == False:
+        print("Track ID set does not represent a primary particle. Therefore, there does not exist a trajectory coming from the vertex.")
+        return 
+    else:
+        trackid_at_vertex = 0 # initialize trackid_at_vertex variable
+        for tid in trackid_set: # loop through trajectories in set to find trajectory with muon (anti)neutrino parent
+            particle_mask = vertex_assoc_traj['trackID'] == tid
+            parent_pdg = find_parent_pdg(vertex_assoc_traj[particle_mask]['parentID'],
+                                         vertex_assoc_traj[particle_mask]['vertexID'],
+                                         traj, ghdr) 
+            
+            if abs(parent_pdg)==14:
+                trackid_at_vertex = tid
+                break
+            else: continue
+
+    return trackid_at_vertex
+
+
+def angle_wrt_beam_direction(trackid_set, vertex_assoc_traj,traj, ghdr):
+
+    trackid_at_vertex = find_trajectory_at_vertex(trackid_set, vertex_assoc_traj,traj, ghdr) # find track id for trajectory at vertex
+
+    trackid_at_vertex_mask = vertex_assoc_traj['trackID']==trackid_at_vertex
+    track_at_vertex = vertex_assoc_traj[trackid_at_vertex_mask] # primary particle trajectory from vertex
+
+    particle_start = track_at_vertex['xyz_start'][0]
+    particle_end = track_at_vertex['xyz_end'][0]
+    #print("Particle Start: ", particle_start)
+
+    # If the particle goes along the beam axis, we expect x_start == x_end and y_start == y_end.
+    # This means that the length would be z_start - z_end. Comparing this value to the true trajectory length
+    # allows us to find the angle between the particle trajectory and the beam (z) axis.
+    particle_vector = particle_end - particle_start # get vector describing particle path
+    #print("Particle Vector: ", particle_vector)
+    particle_vector_length = np.sqrt(np.sum(particle_vector**2))
+    beam_direction_length = particle_vector[2]
+    angle_wrt_beam = np.arccos(beam_direction_length / particle_vector_length) # angle is returned in radians
+
+    #print("Angle w/ resp. to beam:", angle_wrt_beam)
+    return angle_wrt_beam 
+
+
+def angle_between_two_trajectories(traj_trackid_one, traj_trackid_two, vertex_assoc_traj):
+
+    traj_trackid_one_mask = vertex_assoc_traj['trackID']==traj_trackid_one
+    traj_one = vertex_assoc_traj[traj_trackid_one_mask] # trajectory #1
+    #print("Trajectory track ID One:", traj_trackid_one)
+
+    traj_trackid_two_mask = vertex_assoc_traj['trackID']==traj_trackid_two
+    traj_two = vertex_assoc_traj[traj_trackid_two_mask] # trajectory #2
+    #print("Trajectory track ID Two:", traj_trackid_two)
+
+    particle_one_start = traj_one['xyz_start'][0]
+    particle_one_end = traj_one['xyz_end'][0]
+    #print("Particle One Start:", particle_one_start)
+
+    particle_two_start = traj_two['xyz_start'][0]
+    particle_two_end = traj_two['xyz_end'][0]
+    #print("Particle Two Start:", particle_two_start)
+
+    if not (particle_one_start[0] == particle_two_start[0] and \
+        particle_one_start[1] == particle_two_start[1] and \
+        particle_one_start[2] == particle_two_start[2]):
+        print("WARNING: You seem to be comparing two trajectories originating from different locations ...")
+
+    particle_one_vector = particle_one_end - particle_one_start # get vector describing particle one path
+    particle_two_vector = particle_two_end - particle_two_start # get vector describing particle one path
+    
+    particle_one_vector_length = np.sqrt(np.sum(particle_one_vector**2))
+    particle_two_vector_length = np.sqrt(np.sum(particle_two_vector**2))
+    #print("Particle One Vector Length:", particle_one_vector_length)
+    #print("Particle Two Vector Length:", particle_two_vector_length)
+
+    particle_vector_dot_product = np.sum(abs(particle_one_vector * particle_two_vector))
+
+    angle = np.arccos(particle_vector_dot_product / \
+                      (particle_one_vector_length * particle_two_vector_length)) # angle is returned in radians using a \dot b = |a||b|cos\theta
+
+    #print("Angle b/w Two Trajectories:", angle)
+    return angle
 
             
 ##### FIDUCIAL VOLUME/ TOTAL VOLUME ENERGY DEPOSITION -------

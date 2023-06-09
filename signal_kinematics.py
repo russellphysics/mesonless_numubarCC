@@ -69,7 +69,7 @@ def main(sim_dir, input_type, n_files_processed):
                 ### REQUIRE: (A) nu_mu(_bar), (B) CC interaction, (C) NO final state mesons, (D) final state particle start point in FV
                 if nu_mu==True and is_cc==True and mesonless==True and fv_particle_origin==True:
                     sig_char.muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon_dict)
-                    sig_char.hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, hadron_dict)
+                    sig_char.hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, auxiliary.threshold, hadron_dict)
                     sig_char.get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, signal_dict)
 
     # Save all Python dictionaries to JSON files

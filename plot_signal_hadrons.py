@@ -162,7 +162,121 @@ def plot_hadrons(d, scale_factor, sig_bkg = 0):
         #ax8.hist(bins8cont[:-1], bins=bins8cont, weights = counts8cont*scale_factor, label='Contained',histtype='step', linestyle='--')
         ax8.set_xlabel(r"Length [cm]")
         ax8.set_title("Length of Longest Proton Track in "+sample_title+" Events with Neutrons and Protons")
-        ax8.set_ylabel("Count / cm") 
+        ax8.set_ylabel("Events / cm") 
         #ax8.legend()
         plt.savefig(sample_type+"_events_max_proton_length_in_pn_events_truth.png")   
     plt.close(fig8)
+
+    # PLOT: hadron multiplicity above threshold
+    fig9, ax9 = plt.subplots(figsize=(6,4))
+    data9 = np.array([d[key]['hadron_mult_over_thresh'] for key in d.keys()])
+    counts9, bins9 =np.histogram(data9, bins=np.linspace(0,12,13))
+    ax9.hist(bins9[:-1], bins=bins9, weights = counts9*scale_factor, histtype='step')
+    ax9.set_xlabel(r"Primary Hadron Multiplicity Above Threshold")
+    ax9.set_ylabel("Events / Hadron") 
+    plt.savefig(sample_type+"_events_hadron_multiplicity_above_threshold.png")
+    plt.close(fig9)  
+
+    # PLOT: proton multiplicity above threshold
+    fig10, ax10 = plt.subplots(figsize=(6,4))
+    data10 = np.array([d[key]['proton_mult_over_thresh'] for key in d.keys()])
+    counts10, bins10 =np.histogram(data10, bins=np.linspace(0,12,13))
+    ax10.hist(bins10[:-1], bins=bins10, weights = counts10*scale_factor, histtype='step')
+    ax10.set_xlabel(r"Primary Proton Multiplicity Above Threshold")
+    ax10.set_ylabel("Events / Proton") 
+    plt.savefig(sample_type+"_events_proton_multiplicity_above_threshold.png")
+    plt.close(fig10)   
+
+    # PLOT: Lead proton momentum for events with protons
+    fig11, ax11 = plt.subplots(figsize=(8,4))
+    p_lead_mom = []
+    events_w_protons = 0
+    for key in d.keys():
+        if d[key]['proton_mult_over_thresh']>0:
+            p_lead_mom.append(d[key]['lead_proton_momentum'])
+            events_w_protons+=1
+    if events_w_protons >0:  
+        data11tot = np.array(p_lead_mom)
+        counts11tot, bins11tot = np.histogram(data11tot, bins=np.linspace(0,2000,41))
+        ax11.hist(bins11tot[:-1], bins=bins11tot, weights = counts11tot*scale_factor, histtype='step')
+        ax11.set_xlabel(r"Momentum [MeV/c]")
+        ax11.set_title("Leading Proton Momenta in "+sample_title+" Events with Protons")
+        ax11.set_ylabel("Events / 50 MeV/c") 
+        plt.savefig(sample_type+"_lead_proton_momentum_events_with_protons_above_threshold.png")   
+    plt.close(fig11)
+
+    # PLOT: Sub-leading proton momentum for events with 2+ protons
+    fig12, ax12 = plt.subplots(figsize=(8,4))
+    p_sublead_mom = []
+    events_w_greq_2_protons = 0
+    for key in d.keys():
+        if d[key]['proton_mult_over_thresh']>1:
+            p_sublead_mom.append(d[key]['sub_lead_proton_momentum'])
+            events_w_greq_2_protons+=1
+    if events_w_greq_2_protons >0:  
+        data12tot = np.array(p_sublead_mom)
+        counts12tot, bins12tot = np.histogram(data12tot, bins=np.linspace(0,2000,41))
+        ax12.hist(bins12tot[:-1], bins=bins12tot, weights = counts12tot*scale_factor, histtype='step')
+        ax12.set_xlabel(r"Momentum [MeV/c]")
+        ax12.set_title("Subleading Proton Momenta in "+sample_title\
+                       +" Events with 2+ Protons Above Threshold")
+        ax12.set_ylabel("Events / 50 MeV/c") 
+        plt.savefig(sample_type+"_sublead_proton_momentum_events_with_greq_2_protons_above_threshold.png")   
+    plt.close(fig12)
+
+    # PLOT: Lead proton angle wrt beam for events with protons
+    fig13, ax13 = plt.subplots(figsize=(8,4))
+    p_lead_ang_wrt_beam = []
+    events_w_protons = 0
+    for key in d.keys():
+        if d[key]['proton_mult_over_thresh']>0:
+            p_lead_ang_wrt_beam.append(d[key]['lead_proton_ang_wrt_beam'])
+            events_w_protons+=1
+    if events_w_protons >0:  
+        data13tot = np.array(p_lead_ang_wrt_beam)
+        counts13tot, bins13tot = np.histogram(data13tot, bins=np.linspace(0,3.2,33))
+        ax13.hist(bins13tot[:-1], bins=bins13tot, weights = counts13tot*scale_factor, histtype='step')
+        ax13.set_xlabel(r"Angle [Rad]")
+        ax13.set_title("Leading Proton Angle with respect to Beam Direction in "+sample_title\
+                       +" Events with Protons Above Threshold")
+        ax13.set_ylabel("Events / 0.1 Rad") 
+        plt.savefig(sample_type+"_lead_proton_angle_wrt_beam_direction_events_with_protons_above_threshold.png")   
+    plt.close(fig13)
+
+    # PLOT: Subleading proton angle wrt beam for events with protons
+    fig14, ax14 = plt.subplots(figsize=(8,4))
+    p_sublead_ang_wrt_beam = []
+    events_w_greq_2_protons = 0
+    for key in d.keys():
+        if d[key]['proton_mult_over_thresh']>1:
+            p_sublead_ang_wrt_beam.append(d[key]['sub_lead_proton_ang_wrt_beam'])
+            events_w_greq_2_protons+=1
+    if events_w_greq_2_protons >0:  
+        data14tot = np.array(p_sublead_ang_wrt_beam)
+        counts14tot, bins14tot = np.histogram(data14tot, bins=np.linspace(0,3.2,33))
+        ax14.hist(bins14tot[:-1], bins=bins14tot, weights = counts14tot*scale_factor, histtype='step')
+        ax14.set_xlabel(r"Angle [Rad]")
+        ax14.set_title("Subleading Proton Angle with respect to Beam Direction in "+sample_title\
+                       +" Events with 2+ Protons Above Threshold")
+        ax14.set_ylabel("Events / 0.1 Rad") 
+        plt.savefig(sample_type+"_sublead_proton_angle_wrt_beam_direction_events_with_greq_2_protons_above_threshold.png")   
+    plt.close(fig14)
+
+    # PLOT: Subleading proton angle wrt beam for events with protons
+    fig15, ax15 = plt.subplots(figsize=(8,4))
+    p_sublead_ang_wrt_lead_proton = []
+    events_w_greq_2_protons = 0
+    for key in d.keys():
+        if d[key]['proton_mult_over_thresh']>1:
+            p_sublead_ang_wrt_lead_proton.append(d[key]['sub_lead_proton_angle_with_lead_proton'])
+            events_w_greq_2_protons+=1
+    if events_w_greq_2_protons >0:  
+        data15tot = np.array(p_sublead_ang_wrt_lead_proton)
+        counts15tot, bins15tot = np.histogram(data15tot, bins=np.linspace(0,3.2,33))
+        ax15.hist(bins15tot[:-1], bins=bins15tot, weights = counts15tot*scale_factor, histtype='step')
+        ax15.set_xlabel(r"Angle [Rad]")
+        ax15.set_title("Subleading Proton Angle with respect to Leading Proton Direction\n in "+sample_title \
+                       +" Events with 2+ Protons Above Threshold")
+        ax15.set_ylabel("Events / 0.1 Rad") 
+        plt.savefig(sample_type+"_sublead_proton_angle_wrt_lead_proton_events_with_greq_2_protons_above_threshold.png")   
+    plt.close(fig15)

@@ -140,6 +140,8 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
             data8u.append(d[key]['ang'])
             data9u.append(d[key]['mom'] / 1000.)
 
+    print("Minimum momentum of muons punching through MINERvA [GeV/c]:", np.min(data9b))
+
     fig6, ax6 = plt.subplots(figsize=(9,6))
     bins6 = np.linspace(0,15,31)
     counts6f, bins6f =np.histogram(np.array(data6f), bins=bins6)
