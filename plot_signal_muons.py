@@ -94,10 +94,7 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     data5 = np.array([d[key]['nu_energy'] for key in d.keys()]) / 1000.
     counts5, bins5 =np.histogram(data5, bins=np.linspace(0,15,31))
     ax5.hist(bins5[:-1], bins=bins5, weights = counts5*scale_factor, histtype='step')
-    if sig_bkg==0:
-        ax5.set_xlabel(r"Incident Antineutrino Energy [GeV]")
-    else:
-        ax5.set_xlabel(r"Incident Neutrino Energy [GeV]")
+    ax5.set_xlabel(r"Incident Neutrino/Antineutrino Energy [GeV]")
     ax5.set_ylabel("Count / 0.5 GeV") 
     plt.savefig(sample_type+"_events_nu_energy_truth.png")
     plt.close(fig5)      
@@ -152,12 +149,8 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     counts6u, bins6u =np.histogram(np.array(data6u), bins=bins6)
     ax6.hist((bins6f[:-1],bins6d[:-1],bins6b[:-1],bins6s[:-1],bins6p[:-1],bins6u[:-1]), bins=bins6, \
         weights = (counts6f*scale_factor,counts6d*scale_factor,counts6b*scale_factor,counts6s*scale_factor,counts6p*scale_factor,counts6u*scale_factor), histtype='bar', label=loc_labels, stacked='True')
-    if sig_bkg==0:
-        ax6.set_xlabel(r"Incident Antineutrino Energy [GeV]")
-        ax6.set_title(sample_title+' Event Antineutrino Energy Spectrum by Muon Track End Behavior')
-    else:
-        ax6.set_xlabel(r"Incident Neutrino Energy [GeV]")
-        ax6.set_title(sample_title+' Event Neutrino Energy Spectrum by Muon Track End Behavior')
+    ax6.set_xlabel(r"Incident Neutrino/Antineutrino Energy [GeV]")
+    ax6.set_title(sample_title+' Event Neutrino/Antineutrino Energy Spectrum by Muon Track End Behavior')
     ax6.set_ylabel("Count / 0.5 GeV") 
     ax6.legend(loc='upper right')
     plt.savefig(sample_type+"_events_nu_energy_truth_stacked_by_muon_end_loc.png")
@@ -241,12 +234,8 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     counts10und, bins10und =np.histogram(np.array(data10und), bins=bins10)
     ax10.hist((bins10qes[:-1],bins10mec[:-1],bins10res[:-1],bins10dis[:-1],bins10coh[:-1],bins10und[:-1]), bins=bins10, \
         weights = (counts10qes*scale_factor,counts10mec*scale_factor,counts10res*scale_factor,counts10dis*scale_factor,counts10coh*scale_factor,counts10und*scale_factor), histtype='bar', label=loc_labels, stacked='True')
-    if sig_bkg==0:
-        ax10.set_xlabel(r"Incident Antineutrino Energy [GeV]")
-        ax10.set_title(sample_title+' Event Antineutrino Energy Spectrum by Neutrino Interaction Mechanism')
-    else:
-        ax10.set_xlabel(r"Incident Neutrino Energy [GeV]")
-        ax10.set_title(sample_title+' Event Neutrino Energy Spectrum by Neutrino Interaction Mechanism')
+    ax10.set_xlabel(r"Incident Neutrino Energy [GeV]")
+    ax10.set_title(sample_title+' Event Neutrino Energy Spectrum by Neutrino Interaction Mechanism')
     ax10.set_ylabel("Count / 0.5 GeV") 
     ax10.set_xlim(0,15)
     ax10.legend(loc='upper right')
