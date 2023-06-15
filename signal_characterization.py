@@ -175,10 +175,12 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, th
 
     # Set contained and total track energies and lengths to 0; Set hadron + proton multiplicities over threshold to 0.
     total_edep=0.; contained_edep=0.; total_length=0.; contained_length=0.
+    total_edep_over_thresh=0.; contained_edep_over_thresh=0.
     max_proton_contained_length=0.; max_proton_total_length=0. 
     lead_proton_ang_wrt_beam=0.; lead_proton_momentum=0.; sub_lead_proton_ang_wrt_beam=0.; sub_lead_proton_momentum=0.
     lead_proton_traj_at_vertex = 0.; sub_lead_proton_traj_at_vertex = 0.
     hadron_mult_over_thresh = 0.; p_mult_over_thresh = 0.
+    p_ke = 0.
     
     exclude_track_ids = set() # Create set of track IDs to exclude to eliminate redundancies
                               # (i.e. if they've been identified as being from the same particle as an earlier track)
@@ -198,10 +200,15 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, th
         #if fs['pdgId'] == 2112: print("\nTrack ID Set:", track_id_set)
 
         proton_contained_length = 0.; proton_total_length=0. # Reset proton track lengths
+        fs_total_edep =0.; fs_contained_edep=0. # Reset Edep for individual final states
         for tid in track_id_set:
 
-            total_edep += auxiliary.total_edep_charged_e(tid,traj,seg) # *** total visible energy ***
-            contained_edep+= auxiliary.fv_edep_charged_e(tid, traj, seg)
+            total_edep_temp = auxiliary.total_edep_charged_e(tid,traj,seg)
+            contained_edep_temp = auxiliary.fv_edep_charged_e(tid, traj, seg)
+            fs_total_edep+=total_edep_temp
+            total_edep += total_edep_temp# *** total visible energy ***
+            fs_contained_edep+= contained_edep_temp
+            contained_edep+= contained_edep_temp
 
             contained_length+=auxiliary.fv_edep_charged_length(tid, traj, seg) # *** total contained length for protons ***
             total_length+=auxiliary.total_edep_charged_length(tid, traj, seg)
@@ -216,9 +223,10 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, th
             if fs['pdgId'] == 2212: 
                 p_mult_over_thresh += 1
                 p_traj_id_at_vertex = auxiliary.find_trajectory_at_vertex(track_id_set, final_states, traj, ghdr)
-                trackid_at_vertex_mask = final_states['trackID']==p_traj_id_at_vertex
-                p_track_at_vertex = final_states[trackid_at_vertex_mask] 
-                p_mom = np.sqrt(np.sum(p_track_at_vertex['pxyz_start']**2))
+                p_mom = auxiliary.truth_primary_particle_momentum(track_id_set, final_states, traj, ghdr)
+                p_ke += auxiliary.truth_primary_particle_kinetic_energy(fs['pdgId'],track_id_set, final_states, traj, ghdr)
+                total_edep_over_thresh += fs_total_edep # *** total visible energy ***
+                contained_edep_over_thresh+= fs_contained_edep
                 if p_mom > lead_proton_momentum:
                     sub_lead_proton_traj_at_vertex = lead_proton_traj_at_vertex
                     sub_lead_proton_momentum = lead_proton_momentum
@@ -259,6 +267,9 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, th
         sub_lead_proton_momentum = float(sub_lead_proton_momentum), 
         lead_proton_ang_wrt_beam = float(lead_proton_ang_wrt_beam), 
         sub_lead_proton_ang_wrt_beam = float(sub_lead_proton_ang_wrt_beam),
-        sub_lead_proton_angle_with_lead_proton = float(angle_between_lead_and_sublead_protons))
+        sub_lead_proton_angle_with_lead_proton = float(angle_between_lead_and_sublead_protons),
+        primary_protons_total_ke = float(p_ke),
+        total_edep_over_thresh = float(total_edep_over_thresh),
+        contained_edep_over_thresh = float(contained_edep_over_thresh))
     return
                                                  

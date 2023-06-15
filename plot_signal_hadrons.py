@@ -200,7 +200,7 @@ def plot_hadrons(d, scale_factor, sig_bkg = 0):
         counts11tot, bins11tot = np.histogram(data11tot, bins=np.linspace(0,2000,41))
         ax11.hist(bins11tot[:-1], bins=bins11tot, weights = counts11tot*scale_factor, histtype='step')
         ax11.set_xlabel(r"Momentum [MeV/c]")
-        ax11.set_title("Leading Proton Momenta in "+sample_title+" Events with Protons")
+        ax11.set_title("Leading Proton Momentum in\n"+sample_title+" Events with Protons Above Threshold")
         ax11.set_ylabel("Events / 50 MeV/c") 
         plt.savefig(sample_type+"_lead_proton_momentum_events_with_protons_above_threshold.png")   
     plt.close(fig11)
@@ -218,7 +218,7 @@ def plot_hadrons(d, scale_factor, sig_bkg = 0):
         counts12tot, bins12tot = np.histogram(data12tot, bins=np.linspace(0,2000,41))
         ax12.hist(bins12tot[:-1], bins=bins12tot, weights = counts12tot*scale_factor, histtype='step')
         ax12.set_xlabel(r"Momentum [MeV/c]")
-        ax12.set_title("Subleading Proton Momenta in "+sample_title\
+        ax12.set_title("Subleading Proton Momentum in \n"+sample_title\
                        +" Events with 2+ Protons Above Threshold")
         ax12.set_ylabel("Events / 50 MeV/c") 
         plt.savefig(sample_type+"_sublead_proton_momentum_events_with_greq_2_protons_above_threshold.png")   
@@ -237,7 +237,7 @@ def plot_hadrons(d, scale_factor, sig_bkg = 0):
         counts13tot, bins13tot = np.histogram(data13tot, bins=np.linspace(0,3.2,33))
         ax13.hist(bins13tot[:-1], bins=bins13tot, weights = counts13tot*scale_factor, histtype='step')
         ax13.set_xlabel(r"Angle [Rad]")
-        ax13.set_title("Leading Proton Angle with respect to Beam Direction in "+sample_title\
+        ax13.set_title("Leading Proton Angle with respect to Beam Direction in\n"+sample_title\
                        +" Events with Protons Above Threshold")
         ax13.set_ylabel("Events / 0.1 Rad") 
         plt.savefig(sample_type+"_lead_proton_angle_wrt_beam_direction_events_with_protons_above_threshold.png")   
@@ -256,7 +256,7 @@ def plot_hadrons(d, scale_factor, sig_bkg = 0):
         counts14tot, bins14tot = np.histogram(data14tot, bins=np.linspace(0,3.2,33))
         ax14.hist(bins14tot[:-1], bins=bins14tot, weights = counts14tot*scale_factor, histtype='step')
         ax14.set_xlabel(r"Angle [Rad]")
-        ax14.set_title("Subleading Proton Angle with respect to Beam Direction in "+sample_title\
+        ax14.set_title("Subleading Proton Angle with respect to Beam Direction in\n"+sample_title\
                        +" Events with 2+ Protons Above Threshold")
         ax14.set_ylabel("Events / 0.1 Rad") 
         plt.savefig(sample_type+"_sublead_proton_angle_wrt_beam_direction_events_with_greq_2_protons_above_threshold.png")   
@@ -272,7 +272,7 @@ def plot_hadrons(d, scale_factor, sig_bkg = 0):
             events_w_greq_2_protons+=1
     if events_w_greq_2_protons >0:  
         data15tot = np.array(p_sublead_ang_wrt_lead_proton)
-        counts15tot, bins15tot = np.histogram(data15tot, bins=np.linspace(0,3.2,33))
+        counts15tot, bins15tot = np.histogram(data15tot, bins=np.linspace(0,1.6,17))
         ax15.hist(bins15tot[:-1], bins=bins15tot, weights = counts15tot*scale_factor, histtype='step')
         ax15.set_xlabel(r"Angle [Rad]")
         ax15.set_title("Subleading Proton Angle with respect to Leading Proton Direction\n in "+sample_title \
@@ -280,3 +280,50 @@ def plot_hadrons(d, scale_factor, sig_bkg = 0):
         ax15.set_ylabel("Events / 0.1 Rad") 
         plt.savefig(sample_type+"_sublead_proton_angle_wrt_lead_proton_events_with_greq_2_protons_above_threshold.png")   
     plt.close(fig15)
+
+    # PLOT: proton multiplicity truth vs. over threshold
+    fig16, ax16 = plt.subplots(figsize=(6,4))
+    data16_tr = np.array([d[key]['proton_mult'] for key in d.keys()])
+    data16_thresh= np.array([d[key]['proton_mult_over_thresh'] for key in d.keys()])
+    counts16_tr, bins16_tr =np.histogram(data16_tr, bins=np.linspace(0,20,21))
+    counts16_thresh, bins16_thresh =np.histogram(data16_thresh, bins=np.linspace(0,20,21))
+    ax16.hist(bins16_tr[:-1], bins=bins16_tr, weights = counts16_tr*scale_factor, label="Truth", histtype='step')
+    ax16.hist(bins16_thresh[:-1], bins=bins16_thresh, weights = counts16_thresh*scale_factor, label="Over Threshold", histtype='step', linestyle='--')
+    ax16.set_xlabel(r"Primary Proton Multiplicity")
+    ax16.set_ylabel("Events / Proton") 
+    plt.legend()
+    plt.savefig(sample_type+"_events_proton_multiplicity_truth_vs_over_threshold.png")
+    plt.close(fig16)   
+
+    # PLOT: Primary Proton K.E. for events with Protons Over Threshold
+    fig17, ax17 = plt.subplots(figsize=(8,4))
+    p_ke = []
+    events_w_protons = 0
+    for key in d.keys():
+        if d[key]['proton_mult_over_thresh']>0:
+            p_ke.append(d[key]['primary_protons_total_ke'])
+            events_w_protons+=1
+    if events_w_protons >0:  
+        data17tot = np.array(p_ke)
+        counts17tot, bins17tot = np.histogram(data17tot, bins=np.linspace(0,2000,41))
+        ax17.hist(bins17tot[:-1], bins=bins17tot, weights = counts17tot*scale_factor, histtype='step')
+        ax17.set_xlabel(r"Kinetic Energy [MeV]")
+        ax17.set_title("Total Primary Proton Kinetic Energy in\n"+sample_title+" Events with Protons Over Threshold")
+        ax17.set_ylabel("Events / 50 MeV") 
+        plt.savefig(sample_type+"_primary_proton_ke_events_with_protons_above_threshold.png")   
+    plt.close(fig17)
+
+    # PLOT: Truth KE vs. Contained KE for primary protons
+    fig18, ax18 = plt.subplots(figsize=(8,4))
+    data18tot = np.array([d[key]['primary_protons_total_ke'] for key in d.keys()])
+    data18cont = np.array([d[key]['contained_edep_over_thresh'] for key in d.keys()])
+    counts18tot, bins18tot = np.histogram(data18tot, bins=np.linspace(0,2000,101))
+    counts18cont, bins18cont = np.histogram(data18cont, bins=np.linspace(0,2000,101))
+    ax18.hist(bins18tot[:-1], bins=bins18tot, weights = counts18tot*scale_factor, label='Total', histtype='step')
+    ax18.hist(bins18cont[:-1], bins=bins18cont, weights = counts18cont*scale_factor, label='Contained',histtype='step', linestyle='--')
+    ax18.set_xlabel('Primary Proton Energy [MeV]')
+    ax18.set_ylabel('Events / 20 MeV')
+    ax18.set_yscale('log')
+    ax18.legend()
+    plt.savefig(sample_type+"_events_primary_proton_truth_ke_vs_contained_ke.png")
+    plt.close(fig18)

@@ -8,8 +8,10 @@ nu_mu_pdg=14
 
 hadron_pdg_dict ={2112:'n',
                   2212:'p',
+                 -2212:r'$\bar{p}$', 
                   3112:r'$\Sigma^-$',
-                  3122:r'$\Lambda$',
+                  3122:r'$\Lambda^0$',
+                 -3122:r'$\bar{\Lambda}^0$',
                   3212:r'$\Sigma^0$',
                   3222:r'$\Sigma^+$', 
                   4212:r'$\Sigma_c^+$',
@@ -18,11 +20,14 @@ hadron_pdg_dict ={2112:'n',
                   4122:r'$\Lambda_c^+$'} 
 
 neutral_hadron_pdg_dict ={2112:'n',
-                          3122:r'$\Lambda$',
+                          3122:r'$\Lambda^0$',
+                         -3122:r'$\bar{\Lambda}^0$',
                           3212:r'$\Sigma^0$',
                           4112:r'$\Sigma_c^0$'} 
 
 threshold = 1.2 # stand-in threshold in cm (~3 pixels)
+rest_mass_dict ={2212: 938.27208816,
+                   13: 105.6583755  }  # [MeV], from PDG
 
 ##### HDF5 FILE PARSING-------------------------------------
 
@@ -399,6 +404,24 @@ def total_energy(pdg, trackID, traj, seg):
     if pdg in neutral_pdg: return 0.#total_edep_neutral_e(trackID, traj, seg)
     else: return total_edep_charged_e(trackID, traj, seg)
 
+def truth_primary_particle_kinetic_energy(pdg, track_id_set, vertex_assoc_traj, traj, ghdr):
+
+    traj_id_at_vertex = find_trajectory_at_vertex(track_id_set, vertex_assoc_traj, traj, ghdr)
+    trackid_at_vertex_mask = vertex_assoc_traj['trackID']==traj_id_at_vertex
+    track_at_vertex = vertex_assoc_traj[trackid_at_vertex_mask] 
+    energy = track_at_vertex['E_start']
+    ke = energy - rest_mass_dict[pdg]
+
+    return ke
+    
+def truth_primary_particle_momentum(track_id_set, vertex_assoc_traj, traj, ghdr):
+
+    traj_id_at_vertex = find_trajectory_at_vertex(track_id_set, vertex_assoc_traj, traj, ghdr)
+    trackid_at_vertex_mask = vertex_assoc_traj['trackID']==traj_id_at_vertex
+    track_at_vertex = vertex_assoc_traj[trackid_at_vertex_mask] 
+    mom = np.sqrt(np.sum(track_at_vertex['pxyz_start']**2))
+
+    return mom
 
 
 ##### FIDUCIAL VOLUME/ TOTAL VOLUME LENGTH ------------------------
