@@ -208,7 +208,7 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     plt.close(fig9) 
 
      # PLOT: truth-level neutrino energy of interaction STACKED HIST BY END_PT_LOC
-    loc_labels = ['QES', 'MEC', 'RES', 'DIS', 'COH', 'Other']
+    loc_labels = ['Other', 'COH', 'DIS', 'RES', 'MEC', 'QES']
     data10qes = []; data10mec = []; data10res = []; data10dis = []; data10coh = []; data10und = []
     for key in d.keys():
         if d[key]['nu_int_type'] == 'QES':
@@ -224,16 +224,18 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
         elif d[key]['nu_int_type'] == 'UND':
             data10und.append(d[key]['nu_energy'] / 1000.)
 
+    # PLOT: truth-level neutrino energy of interaction STACKED HIST BY Neutrino Interaction Mechanism
     fig10, ax10 = plt.subplots(figsize=(9,6))
     bins10 = np.linspace(0,15,31)
-    counts10qes, bins10qes =np.histogram(np.array(data10qes), bins=bins10)
-    counts10mec, bins10mec =np.histogram(np.array(data10mec), bins=bins10)
-    counts10res, bins10res =np.histogram(np.array(data10res), bins=bins10)
-    counts10dis, bins10dis =np.histogram(np.array(data10dis), bins=bins10)
-    counts10coh, bins10coh =np.histogram(np.array(data10coh), bins=bins10)
     counts10und, bins10und =np.histogram(np.array(data10und), bins=bins10)
-    ax10.hist((bins10qes[:-1],bins10mec[:-1],bins10res[:-1],bins10dis[:-1],bins10coh[:-1],bins10und[:-1]), bins=bins10, \
-        weights = (counts10qes*scale_factor,counts10mec*scale_factor,counts10res*scale_factor,counts10dis*scale_factor,counts10coh*scale_factor,counts10und*scale_factor), histtype='bar', label=loc_labels, stacked='True')
+    counts10coh, bins10coh =np.histogram(np.array(data10coh), bins=bins10)
+    counts10dis, bins10dis =np.histogram(np.array(data10dis), bins=bins10)
+    counts10res, bins10res =np.histogram(np.array(data10res), bins=bins10)
+    counts10mec, bins10mec =np.histogram(np.array(data10mec), bins=bins10)
+    counts10qes, bins10qes =np.histogram(np.array(data10qes), bins=bins10)
+    ax10.hist((bins10und[:-1],bins10coh[:-1],bins10dis[:-1],bins10res[:-1],bins10mec[:-1],bins10qes[:-1]), bins=bins10, \
+        weights = (counts10und*scale_factor,counts10coh*scale_factor,counts10dis*scale_factor,counts10res*scale_factor,counts10mec*scale_factor,counts10qes*scale_factor), \
+        histtype='bar', label=loc_labels, stacked='True', color=['brown', 'orange', 'red', 'purple', 'blue', 'green', ])
     ax10.set_xlabel(r"Incident Neutrino Energy [GeV]")
     ax10.set_title(sample_title+' Event Neutrino Energy Spectrum by Neutrino Interaction Mechanism')
     ax10.set_ylabel("Count / 0.5 GeV") 
