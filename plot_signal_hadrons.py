@@ -466,7 +466,7 @@ def plot_hadrons(d, scale_factor, sig_bkg = 0):
         weights = (counts19und*scale_factor,counts19coh*scale_factor,counts19dis*scale_factor,counts19res*scale_factor,counts19mec*scale_factor,counts19qes*scale_factor), \
         histtype='bar', label=loc_labels, stacked='True', color=['brown', 'orange', 'red', 'purple', 'blue', 'green', ])
     ax19.set_xlabel(r"Primary Proton Multiplicity")
-    ax19.set_title(sample_title+' Event Primary Proton Multiplicity by Neutrino Interaction Mechanism')
+    ax19.set_title(sample_title+' Event Primary Proton Multiplicity \nby Neutrino Interaction Mechanism')
     ax19.set_ylabel("Events / Proton") 
     ax19.legend(loc='upper right')
     plt.savefig(sample_type+"_events_proton_multiplicity_truth_stacked_by_neutrino_interaction_mechanism.png")
@@ -504,7 +504,7 @@ def plot_hadrons(d, scale_factor, sig_bkg = 0):
         weights = (counts21und*scale_factor,counts21coh*scale_factor,counts21dis*scale_factor,counts21res*scale_factor,counts21mec*scale_factor,counts21qes*scale_factor), \
         histtype='bar', label=loc_labels, stacked='True', color=['brown', 'orange', 'red', 'purple', 'blue', 'green', ])
     ax21.set_xlabel(r"Primary Hadron Multiplicity")
-    ax21.set_title(sample_title+' Event Primary Hadron Multiplicity by Neutrino Interaction Mechanism')
+    ax21.set_title(sample_title+' Event Primary Hadron Multiplicity\n by Neutrino Interaction Mechanism')
     ax21.set_ylabel("Events / Hadron") 
     ax21.legend(loc='upper right')
     plt.savefig(sample_type+"_events_hadron_multiplicity_truth_stacked_by_neutrino_interaction_mechanism.png")
