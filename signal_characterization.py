@@ -97,6 +97,10 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
         is_primary = auxiliary.is_primary_particle(track_id_set, final_states, traj, ghdr) 
 
         if is_primary == False: continue # Only look at final state particles
+
+        if len(track_id_set)>1:
+            print("Length of Track ID Set:", len(track_id_set))
+
         for tid in track_id_set:
 
             total_edep += auxiliary.total_edep_charged_e(tid,traj,seg) # *** total visible energy ***
@@ -104,11 +108,21 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
             
             contained_length+=auxiliary.fv_edep_charged_length(tid, traj, seg) # *** total visible track length ***
             total_length+=auxiliary.total_edep_charged_length(tid, traj, seg)
-
-
-    # Characterize Muon Endpoint/Containment
-        end_pt = fs['xyz_end']
-        start_pt = fs['xyz_start']
+        
+        # Characterize Muon Endpoint/Containment
+        if len(track_id_set)>1:
+            start_tid = auxiliary.find_trajectory_at_vertex(track_id_set, final_states,traj, ghdr)
+            start_tid_mask = final_states['trackID']==start_tid
+            muon_start_traj = final_states[start_tid_mask]
+            start_pt = muon_start_traj['xyz_start']
+            
+            end_tid = auxiliary.find_forward_primary_particle_end_trajectory(track_id_set, final_states,traj, ghdr)
+            end_tid_mask = final_states['trackID']==end_tid
+            muon_end_traj = final_states[end_tid_mask]
+            end_pt = muon_end_traj['xyz_end']
+        else:
+            end_pt = fs['xyz_end']
+            start_pt = fs['xyz_start']
         end_pt_loc = twoBytwo_defs.particle_end_loc(start_pt, end_pt)
 
     # Save collected info in input muon_dict                                                                                                                         
@@ -124,6 +138,8 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
         nu_energy=float(nu_energy),
         q2 = float(q2),
         end_pt_loc = str(end_pt_loc),
+        muon_start = [float(i) for i in start_pt],
+        muon_end = [float(i) for i in end_pt],
         nu_int_type=str(nu_int_type))
     return
 
@@ -157,6 +173,7 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, th
     #print("Final State Hadrons:", gstack_vert_fs_hadrons)
     #print("Final State PDG Stack:", gstack_vert_fs)
     #print("Vertex PDG Stack Set:", gstack_pdg_set)
+    nu_int_type = auxiliary.nu_int_type(ghdr, vert_id) # Neutrino interaction mechanism (Truth)
 
     hadron_mult = len(gstack_vert_fs_hadrons) # F.S. hadron multiplicity
     n_mult = 0
@@ -270,6 +287,7 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, th
         sub_lead_proton_angle_with_lead_proton = float(angle_between_lead_and_sublead_protons),
         primary_protons_total_ke = float(p_ke),
         total_edep_over_thresh = float(total_edep_over_thresh),
-        contained_edep_over_thresh = float(contained_edep_over_thresh))
+        contained_edep_over_thresh = float(contained_edep_over_thresh),
+        nu_int_type=str(nu_int_type))
     return
                                                  

@@ -239,6 +239,24 @@ def find_trajectory_at_vertex(trackid_set, vertex_assoc_traj,traj, ghdr):
 
     return trackid_at_vertex
 
+def find_forward_primary_particle_end_trajectory(trackid_set, vertex_assoc_traj,traj, ghdr):
+    
+    tid_at_vertex = find_trajectory_at_vertex(trackid_set, vertex_assoc_traj,traj, ghdr)
+    particle_mask = vertex_assoc_traj['trackID'] == tid_at_vertex
+    start_pt = vertex_assoc_traj[particle_mask]['xyz_start']
+
+    trackid_at_end = tid_at_vertex # initialize trackid_at_vertex variable
+    end_z = start_pt[2] # initialize end z value
+    for tid in trackid_set: # loop through trajectories in set to find trajectory with largest z value
+        traj_mask = vertex_assoc_traj['trackID'] == tid
+        tid_end = vertex_assoc_traj[traj_mask]['xyz_end']
+        if tid_end[2]>end_z:
+            end_z = tid_end[2]
+            trackid_at_end = tid
+        else: continue
+
+    return trackid_at_end
+
 
 def angle_wrt_beam_direction(trackid_set, vertex_assoc_traj,traj, ghdr):
 

@@ -208,7 +208,7 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     plt.close(fig9) 
 
      # PLOT: truth-level neutrino energy of interaction STACKED HIST BY END_PT_LOC
-    loc_labels = ['QES', 'MEC', 'RES', 'DIS', 'COH', 'Other']
+    loc_labels = ['Other', 'COH', 'DIS', 'RES', 'MEC', 'QES']
     data10qes = []; data10mec = []; data10res = []; data10dis = []; data10coh = []; data10und = []
     for key in d.keys():
         if d[key]['nu_int_type'] == 'QES':
@@ -224,16 +224,18 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
         elif d[key]['nu_int_type'] == 'UND':
             data10und.append(d[key]['nu_energy'] / 1000.)
 
+    # PLOT: truth-level neutrino energy of interaction STACKED HIST BY Neutrino Interaction Mechanism
     fig10, ax10 = plt.subplots(figsize=(9,6))
     bins10 = np.linspace(0,15,31)
-    counts10qes, bins10qes =np.histogram(np.array(data10qes), bins=bins10)
-    counts10mec, bins10mec =np.histogram(np.array(data10mec), bins=bins10)
-    counts10res, bins10res =np.histogram(np.array(data10res), bins=bins10)
-    counts10dis, bins10dis =np.histogram(np.array(data10dis), bins=bins10)
-    counts10coh, bins10coh =np.histogram(np.array(data10coh), bins=bins10)
     counts10und, bins10und =np.histogram(np.array(data10und), bins=bins10)
-    ax10.hist((bins10qes[:-1],bins10mec[:-1],bins10res[:-1],bins10dis[:-1],bins10coh[:-1],bins10und[:-1]), bins=bins10, \
-        weights = (counts10qes*scale_factor,counts10mec*scale_factor,counts10res*scale_factor,counts10dis*scale_factor,counts10coh*scale_factor,counts10und*scale_factor), histtype='bar', label=loc_labels, stacked='True')
+    counts10coh, bins10coh =np.histogram(np.array(data10coh), bins=bins10)
+    counts10dis, bins10dis =np.histogram(np.array(data10dis), bins=bins10)
+    counts10res, bins10res =np.histogram(np.array(data10res), bins=bins10)
+    counts10mec, bins10mec =np.histogram(np.array(data10mec), bins=bins10)
+    counts10qes, bins10qes =np.histogram(np.array(data10qes), bins=bins10)
+    ax10.hist((bins10und[:-1],bins10coh[:-1],bins10dis[:-1],bins10res[:-1],bins10mec[:-1],bins10qes[:-1]), bins=bins10, \
+        weights = (counts10und*scale_factor,counts10coh*scale_factor,counts10dis*scale_factor,counts10res*scale_factor,counts10mec*scale_factor,counts10qes*scale_factor), \
+        histtype='bar', label=loc_labels, stacked='True', color=['brown', 'orange', 'red', 'purple', 'blue', 'green', ])
     ax10.set_xlabel(r"Incident Neutrino Energy [GeV]")
     ax10.set_title(sample_title+' Event Neutrino Energy Spectrum by Neutrino Interaction Mechanism')
     ax10.set_ylabel("Count / 0.5 GeV") 
@@ -241,3 +243,102 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     ax10.legend(loc='upper right')
     plt.savefig(sample_type+"_events_nu_energy_truth_stacked_by_neutrino_interaction_mechanism.png")
     plt.close(fig10)
+
+    # Get Detector Boundaries for Plotting
+    # TPCs
+    tpc_bounds_x = twoBytwo_defs.tpc_bounds(0)
+    tpc_bounds_y = twoBytwo_defs.tpc_bounds(1)[0] # only one set of dims
+    tpc_bounds_z = twoBytwo_defs.tpc_bounds(2)
+    print("TPC Bounds X:", tpc_bounds_x)
+    print("TPC Bounds Y:", tpc_bounds_y)
+    print("TPC Bounds Z:", tpc_bounds_z)
+    # MINERvA
+    MINERvA_bounds_x = twoBytwo_defs.MINERvA_bounds(0)[0] # only one set of dims
+    MINERvA_bounds_y = twoBytwo_defs.MINERvA_bounds(1)[0] # only one set of dims
+    MINERvA_bounds_z = twoBytwo_defs.MINERvA_bounds(2)
+    print("MINERvA Bounds X:", MINERvA_bounds_x)
+    print("MINERvA Bounds Y:", MINERvA_bounds_y)
+    print("MINERvA Bounds Z:", MINERvA_bounds_z)
+
+
+    # PLOT: truth-level muon start location
+    fig11, ax11 = plt.subplots(figsize=(8,6))
+    data11x = np.array([d[key]['muon_start'][0] for key in d.keys()])
+    data11y = np.array([d[key]['muon_start'][1] for key in d.keys()])
+    bins11 = np.linspace(-500,500,101)
+    counts11, bins11x, bins11y = np.histogram2d(np.array(data11x), np.array(data11y), bins=bins11)
+    b11xmesh, b11ymesh = np.meshgrid(bins11x, bins11y)
+    counts11 = counts11.T # NOTE: Hist2D doesn't follow Cartesian coords, so need to transpose counts for plotting
+    plot_start = ax11.pcolormesh(b11xmesh, b11ymesh,counts11*scale_factor)
+    ax11.set_xlabel(r"X [cm]")
+    ax11.set_title(sample_title+' Event Muon Truth XY Start Position')
+    ax11.set_ylabel(r"Y [cm]") 
+    cbar = fig11.colorbar(mappable=plot_start, ax=ax11)
+    cbar.set_label(r"Events / 100 cm$^2$")
+    # TPC Dimensions in XY
+    ax11.text(tpc_bounds_x[0][0], tpc_bounds_y[1]+10, r'2x2', color='red',weight='bold')
+    ax11.plot(np.array(tpc_bounds_x[0]), np.full(2, tpc_bounds_y[0]), color='red', linestyle="-", linewidth=1)
+    ax11.plot(np.array(tpc_bounds_x[1]), np.full(2, tpc_bounds_y[0]), color='red', linestyle="-", linewidth=1)
+    ax11.plot(np.array(tpc_bounds_x[2]), np.full(2, tpc_bounds_y[0]), color='red', linestyle="-", linewidth=1)
+    ax11.plot(np.array(tpc_bounds_x[3]), np.full(2, tpc_bounds_y[0]), color='red', linestyle="-", linewidth=1)
+    ax11.plot(np.array(tpc_bounds_x[0]), np.full(2, tpc_bounds_y[1]), color='red', linestyle="-", linewidth=1)
+    ax11.plot(np.array(tpc_bounds_x[1]), np.full(2, tpc_bounds_y[1]), color='red', linestyle="-", linewidth=1)
+    ax11.plot(np.array(tpc_bounds_x[2]), np.full(2, tpc_bounds_y[1]), color='red', linestyle="-", linewidth=1)
+    ax11.plot(np.array(tpc_bounds_x[3]), np.full(2, tpc_bounds_y[1]), color='red', linestyle="-", linewidth=1)
+    ax11.vlines(tpc_bounds_x[0][0],tpc_bounds_y[0],tpc_bounds_y[1], color='red', linestyle="-", linewidth=1)
+    ax11.vlines(tpc_bounds_x[0][1],tpc_bounds_y[0],tpc_bounds_y[1], color='red', linestyle="-", linewidth=1)
+    ax11.vlines(tpc_bounds_x[1][0],tpc_bounds_y[0],tpc_bounds_y[1], color='red', linestyle="-", linewidth=1)
+    ax11.vlines(tpc_bounds_x[1][1],tpc_bounds_y[0],tpc_bounds_y[1], color='red', linestyle="-", linewidth=1)
+    ax11.vlines(tpc_bounds_x[2][0],tpc_bounds_y[0],tpc_bounds_y[1], color='red', linestyle="-", linewidth=1)
+    ax11.vlines(tpc_bounds_x[2][1],tpc_bounds_y[0],tpc_bounds_y[1], color='red', linestyle="-", linewidth=1)
+    ax11.vlines(tpc_bounds_x[3][0],tpc_bounds_y[0],tpc_bounds_y[1], color='red', linestyle="-", linewidth=1)
+    ax11.vlines(tpc_bounds_x[3][1],tpc_bounds_y[0],tpc_bounds_y[1], color='red', linestyle="-", linewidth=1)
+    # MINERvA modules
+    ax11.text(MINERvA_bounds_x[0], MINERvA_bounds_y[1]+10, r'MINER$\nu$A', color='magenta',weight='bold')
+    ax11.plot(np.array(MINERvA_bounds_x), np.full(2, MINERvA_bounds_y[0]), color='magenta', linestyle="-", linewidth=1.)
+    ax11.plot(np.array(MINERvA_bounds_x), np.full(2, MINERvA_bounds_y[1]), color='magenta', linestyle="-", linewidth=1.)
+    ax11.vlines(MINERvA_bounds_x[0],MINERvA_bounds_y[0],MINERvA_bounds_y[1], color='magenta', linestyle="-", linewidth=1.)
+    ax11.vlines(MINERvA_bounds_x[1],MINERvA_bounds_y[0],MINERvA_bounds_y[1], color='magenta', linestyle="-", linewidth=1.)
+    plt.savefig(sample_type+"_events_muon_start_xy_truth_stacked_by_neutrino_interaction_mechanism.png")
+    plt.close(fig11)
+
+    # PLOT: truth-level muon start location
+    fig12, ax12 = plt.subplots(figsize=(8,6))
+    data12x = np.array([d[key]['muon_end'][0] for key in d.keys()])
+    data12y = np.array([d[key]['muon_end'][1] for key in d.keys()])
+    bins12 = np.linspace(-500,500,101)
+    counts12, bins12x, bins12y = np.histogram2d(np.array(data12x), np.array(data12y), bins=bins12)
+    b12xmesh, b12ymesh = np.meshgrid(bins12x, bins12y)
+    counts12 = counts12.T # NOTE: Hist2D doesn't follow Cartesian coords, so need to transpose counts for plotting
+    plot_end = ax12.pcolormesh(b12xmesh, b12ymesh,counts12*scale_factor)
+    ax12.set_xlabel(r"X [cm]")
+    ax12.set_title(sample_title+' Event Muon Truth XY End Position')
+    ax12.set_ylabel(r"Y [cm]") 
+    cbar = fig12.colorbar(mappable=plot_end, ax=ax12)
+    cbar.set_label(r"Events / 100 cm$^2$")
+    # TPC Dimensions in XY
+    ax12.text(tpc_bounds_x[0][0], tpc_bounds_y[1]+10, r'2x2', color='red',weight='bold')
+    ax12.plot(np.array(tpc_bounds_x[0]), np.full(2, tpc_bounds_y[0]), color='red', linestyle="-", linewidth=1)
+    ax12.plot(np.array(tpc_bounds_x[1]), np.full(2, tpc_bounds_y[0]), color='red', linestyle="-", linewidth=1)
+    ax12.plot(np.array(tpc_bounds_x[2]), np.full(2, tpc_bounds_y[0]), color='red', linestyle="-", linewidth=1)
+    ax12.plot(np.array(tpc_bounds_x[3]), np.full(2, tpc_bounds_y[0]), color='red', linestyle="-", linewidth=1)
+    ax12.plot(np.array(tpc_bounds_x[0]), np.full(2, tpc_bounds_y[1]), color='red', linestyle="-", linewidth=1)
+    ax12.plot(np.array(tpc_bounds_x[1]), np.full(2, tpc_bounds_y[1]), color='red', linestyle="-", linewidth=1)
+    ax12.plot(np.array(tpc_bounds_x[2]), np.full(2, tpc_bounds_y[1]), color='red', linestyle="-", linewidth=1)
+    ax12.plot(np.array(tpc_bounds_x[3]), np.full(2, tpc_bounds_y[1]), color='red', linestyle="-", linewidth=1)
+    ax12.vlines(tpc_bounds_x[0][0],tpc_bounds_y[0],tpc_bounds_y[1], color='red', linestyle="-", linewidth=1)
+    ax12.vlines(tpc_bounds_x[0][1],tpc_bounds_y[0],tpc_bounds_y[1], color='red', linestyle="-", linewidth=1)
+    ax12.vlines(tpc_bounds_x[1][0],tpc_bounds_y[0],tpc_bounds_y[1], color='red', linestyle="-", linewidth=1)
+    ax12.vlines(tpc_bounds_x[1][1],tpc_bounds_y[0],tpc_bounds_y[1], color='red', linestyle="-", linewidth=1)
+    ax12.vlines(tpc_bounds_x[2][0],tpc_bounds_y[0],tpc_bounds_y[1], color='red', linestyle="-", linewidth=1)
+    ax12.vlines(tpc_bounds_x[2][1],tpc_bounds_y[0],tpc_bounds_y[1], color='red', linestyle="-", linewidth=1)
+    ax12.vlines(tpc_bounds_x[3][0],tpc_bounds_y[0],tpc_bounds_y[1], color='red', linestyle="-", linewidth=1)
+    ax12.vlines(tpc_bounds_x[3][1],tpc_bounds_y[0],tpc_bounds_y[1], color='red', linestyle="-", linewidth=1)
+    # MINERvA modules
+    ax12.text(MINERvA_bounds_x[0], MINERvA_bounds_y[1]+10, r'MINER$\nu$A', color='magenta',weight='bold')
+    ax12.plot(np.array(MINERvA_bounds_x), np.full(2, MINERvA_bounds_y[0]), color='magenta', linestyle="-", linewidth=1.)
+    ax12.plot(np.array(MINERvA_bounds_x), np.full(2, MINERvA_bounds_y[1]), color='magenta', linestyle="-", linewidth=1.)
+    ax12.vlines(MINERvA_bounds_x[0],MINERvA_bounds_y[0],MINERvA_bounds_y[1], color='magenta', linestyle="-", linewidth=1.)
+    ax12.vlines(MINERvA_bounds_x[1],MINERvA_bounds_y[0],MINERvA_bounds_y[1], color='magenta', linestyle="-", linewidth=1.)
+    plt.savefig(sample_type+"_events_muon_end_xy_truth_stacked_by_neutrino_interaction_mechanism.png")
+    plt.close(fig12)
