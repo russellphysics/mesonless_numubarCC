@@ -249,16 +249,16 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     tpc_bounds_x = twoBytwo_defs.tpc_bounds(0)
     tpc_bounds_y = twoBytwo_defs.tpc_bounds(1)[0] # only one set of dims
     tpc_bounds_z = twoBytwo_defs.tpc_bounds(2)
-    print("TPC Bounds X:", tpc_bounds_x)
-    print("TPC Bounds Y:", tpc_bounds_y)
-    print("TPC Bounds Z:", tpc_bounds_z)
+    #print("TPC Bounds X:", tpc_bounds_x)
+    #print("TPC Bounds Y:", tpc_bounds_y)
+    #print("TPC Bounds Z:", tpc_bounds_z)
     # MINERvA
     MINERvA_bounds_x = twoBytwo_defs.MINERvA_bounds(0)[0] # only one set of dims
     MINERvA_bounds_y = twoBytwo_defs.MINERvA_bounds(1)[0] # only one set of dims
     MINERvA_bounds_z = twoBytwo_defs.MINERvA_bounds(2)
-    print("MINERvA Bounds X:", MINERvA_bounds_x)
-    print("MINERvA Bounds Y:", MINERvA_bounds_y)
-    print("MINERvA Bounds Z:", MINERvA_bounds_z)
+    #print("MINERvA Bounds X:", MINERvA_bounds_x)
+    #print("MINERvA Bounds Y:", MINERvA_bounds_y)
+    #print("MINERvA Bounds Z:", MINERvA_bounds_z)
 
 
     # PLOT: truth-level muon start location
@@ -342,3 +342,21 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     ax12.vlines(MINERvA_bounds_x[1],MINERvA_bounds_y[0],MINERvA_bounds_y[1], color='magenta', linestyle="-", linewidth=1.)
     plt.savefig(sample_type+"_events_muon_end_xy_truth_stacked_by_neutrino_interaction_mechanism.png")
     plt.close(fig12)
+
+    # Neutrino vs. Antineutrino Events
+    fig13, ax13 = plt.subplots(figsize=(6,4))
+    nu_pdg_list=[d[key]['nu_pdg'] for key in d.keys()]
+    parent_pdg_list=[d[key]['parent_pdg'] for key in d.keys()]
+    print("Parent PDG values:", set(parent_pdg_list))
+    print("Nu PDG values:", set(nu_pdg_list))
+    nu_pdg_set=set(pdg for pdg in nu_pdg_list)
+    nu_pdg_count=[(pdg, nu_pdg_list.count(pdg)) for pdg in nu_pdg_set]
+    nu_pdg_fraction=[100*(i[1]/len(np.array(nu_pdg_list))) for i in nu_pdg_count]
+    if nu_pdg_count[0][0] == 14:
+        nu_pdg_labels=['Neutrino', 'Antineutrino']
+    else:
+        nu_pdg_labels=['Antineutrino', 'Neutrino']
+    ax13.pie(nu_pdg_fraction, labels=nu_pdg_labels, autopct='%1.1f%%')
+    ax13.set_title(sample_title+r" Event Neutrino vs. Antineutrino Breakdown")
+    plt.savefig(sample_type+"_events_neutrino_vs_antineutrino_truth.png")
+    plt.close(fig13)    

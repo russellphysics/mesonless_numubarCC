@@ -72,6 +72,7 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
     nu_energy = truth_level_summ['Enu'] # Truth-level neutrino energy
     q2 = truth_level_summ['Q2'] # Truth-level interaction 4-momentum squared
     nu_int_type = auxiliary.nu_int_type(ghdr, vert_id) # Neutrino interaction mechanism
+    nu_pdg = truth_level_summ['nu_pdg']
 
     total_edep=0.; contained_edep=0.; total_length=0.; contained_length=0. # Set contained and total track energies and lengths to 0
 
@@ -89,7 +90,6 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
         if track_id in exclude_track_ids: continue
 
         pdg = fs['pdgId'] # *** pdg ***     
-        parent_pdg = auxiliary.find_parent_pdg(fs['parentID'],vert_id, traj, ghdr)# *** parent pdg ***
 
         track_id_set = auxiliary.same_pdg_connected_trajectories(pdg, track_id, final_states, traj, ghdr)
         exclude_track_ids.update(track_id_set) # Exclude track IDs associated with same particle from future counting
@@ -97,6 +97,12 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
         is_primary = auxiliary.is_primary_particle(track_id_set, final_states, traj, ghdr) 
 
         if is_primary == False: continue # Only look at final state particles
+
+        track_id_at_vertex = auxiliary.find_trajectory_at_vertex(track_id_set, final_states,traj, ghdr)
+        final_state_vertex_tid_mask = final_states['trackID'] == track_id_at_vertex
+        fs_at_vertex = final_states[final_state_vertex_tid_mask]
+
+        parent_pdg = auxiliary.find_parent_pdg(fs_at_vertex['parentID'],vert_id, traj, ghdr)# *** parent pdg ***
 
         if len(track_id_set)>1:
             print("Length of Track ID Set:", len(track_id_set))
@@ -128,6 +134,7 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
     # Save collected info in input muon_dict                                                                                                                         
     muon_dict[(spill_id,vert_id)]=dict(
         pdg=int(pdg),
+        nu_pdg = int(nu_pdg), 
         parent_pdg=int(parent_pdg),
         total_edep=float(total_edep),
         contained_edep=float(contained_edep),
@@ -159,6 +166,10 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, th
     final_states = traj[traj_vert_mask] # Trajectories associated with vertex
 
     leptons_abs_pdg = [11, 12, 13, 14, 15, 16] # List of lepton PDG IDs (abs value)
+
+    ghdr_vert_mask = ghdr['vertexID']==vert_id
+    truth_level_summ = ghdr[ghdr_vert_mask] # Get GENIE truth info associated with vertex
+    nu_pdg = truth_level_summ['nu_pdg']
     
     gstack_vert_mask = gstack['vertexID']==vert_id
     gstack_vert = gstack[gstack_vert_mask] # Particle ID information associated with vertex
@@ -198,7 +209,7 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, th
     lead_proton_traj_at_vertex = 0.; sub_lead_proton_traj_at_vertex = 0.
     hadron_mult_over_thresh = 0.; p_mult_over_thresh = 0.
     p_ke = 0.
-    
+
     exclude_track_ids = set() # Create set of track IDs to exclude to eliminate redundancies
                               # (i.e. if they've been identified as being from the same particle as an earlier track)
     for fs in final_states:
@@ -268,6 +279,7 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, th
 
     # Save collected info in input hadron_dict
     hadron_dict[(spill_id,vert_id)]=dict(
+        nu_pdg = int(nu_pdg),
         hadron_mult = int(hadron_mult),
         neutron_mult = int(n_mult),
         proton_mult = int(p_mult),
