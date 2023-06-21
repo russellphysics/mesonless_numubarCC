@@ -66,7 +66,7 @@ def plot_hadrons(d, scale_factor, sig_bkg = 0):
     plt.savefig(sample_type+"_events_hadron_multiplicity_truth.png")
     plt.close(fig2)    
 
-    # PLOT: truth-level 4-momentum squared of interaction
+    # PLOT: Primary Hadron PDG IDs fractions
     #       ** no scale factor applied because we're looking at fractions anyways ** 
     fig3, ax3 = plt.subplots(figsize=(6,4))
     hadron_fs_pdg_list=[sorted(d[key]['hadron_pdg_set']) for key in d.keys()]
