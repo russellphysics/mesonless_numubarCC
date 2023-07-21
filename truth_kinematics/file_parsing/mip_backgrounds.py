@@ -1,8 +1,10 @@
-import matplotlib
 import matplotlib.pyplot as plt
-import twoBytwo_defs
-import auxiliary
 import numpy as np
+import sys
+sys.path.append('../../common')
+import truth_methods as truth
+import singleParticleAssociation_methods as particle_assoc
+import kinematicVariable_methods as kinematics
 
 
 def primaries(spill_id, vert_id, ghdr, gstack, traj, vert, seg, primary_dict):
@@ -19,17 +21,17 @@ def primaries(spill_id, vert_id, ghdr, gstack, traj, vert, seg, primary_dict):
         track_id = fs['trackID']
         if track_id in track_ids_seen: continue
 
-        track_id_set = auxiliary.same_pdg_connected_trajectories(pdg, track_id, \
+        track_id_set = particle_assoc.same_pdg_connected_trajectories(pdg, track_id, \
                                                                  final_states, \
                                                                  traj, ghdr)
         track_ids_seen.update(track_id_set)
 
         total_edep, contained_edep, total_length, contained_length=[0. for i in range(4)]
         for tis in track_id_set:
-            total_edep += auxiliary.total_energy(pdg, tis, traj, seg)
-            contained_edep += auxiliary.fv_contained_energy(pdg, tis, traj, seg)
-            total_length += auxiliary.total_length(pdg, tis, traj, seg)
-            contained_length += auxiliary.fv_contained_length(pdg, tis, traj, seg)        
+            total_edep += kinematics.total_energy(pdg, tis, traj, seg)
+            contained_edep += kinematics.fv_contained_energy(pdg, tis, traj, seg)
+            total_length += kinematics.total_length(pdg, tis, traj, seg)
+            contained_length += kinematics.fv_contained_length(pdg, tis, traj, seg)        
         
         primary_dict[(spill_id,vert_id, track_id)]=dict(
             pdg=int(pdg),
@@ -65,19 +67,19 @@ def pion_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, pion
         track_id = fs['trackID']        
         if track_id in track_ids_seen: continue
         
-        track_id_set = auxiliary.same_pdg_connected_trajectories(pdg, track_id, \
+        track_id_set = particle_assoc.same_pdg_connected_trajectories(pdg, track_id, \
                                                                  final_states, \
                                                                  traj, ghdr)
         track_ids_seen.update(track_id_set)
 
-        parent_pdg = auxiliary.find_parent_pdg(fs['parentID'], fs['vertexID'], traj, ghdr)
+        parent_pdg = truth.find_parent_pdg(fs['parentID'], fs['vertexID'], traj, ghdr)
 
         total_edep, contained_edep, total_length, contained_length=[0. for i in range(4)]
         for tis in track_id_set:
-            total_edep += auxiliary.total_energy(pdg, tis, traj, seg)
-            contained_edep += auxiliary.fv_contained_energy(pdg, tis, traj, seg)
-            total_length += auxiliary.total_length(pdg, tis, traj, seg)
-            contained_length += auxiliary.fv_contained_length(pdg, tis, traj, seg)
+            total_edep += kinematics.total_energy(pdg, tis, traj, seg)
+            contained_edep += kinematics.fv_contained_energy(pdg, tis, traj, seg)
+            total_length += kinematics.total_length(pdg, tis, traj, seg)
+            contained_length += kinematics.fv_contained_length(pdg, tis, traj, seg)
             
         pion_dict[(spill_id,vert_id, track_id)]=dict(
             pdg=int(pdg),

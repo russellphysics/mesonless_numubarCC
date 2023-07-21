@@ -1,13 +1,5 @@
-import matplotlib
-import matplotlib.pyplot as plt
-import h5py
-import glob
 import json
 import argparse
-import numpy as np
-import twoBytwo_defs
-import auxiliary
-import signal_characterization as sig_char
 from plot_signal_muons import plot_muons
 from plot_signal_hadrons import plot_hadrons
 

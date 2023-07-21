@@ -1,13 +1,10 @@
-import matplotlib
 import matplotlib.pyplot as plt
-import h5py
-import glob
-import json
-import argparse
 import numpy as np
-import twoBytwo_defs
-import auxiliary
-import signal_characterization as sig_char
+import sys
+sys.path.append('../file_parsing')
+sys.path.append('../../common')
+import geometry_defs as geo_defs
+import geometry_methods as geo_methods
 
 # PLOT: Muon kinematics
 #       sig_bkg is an int such that 0 == signal, 1 == 'dirt' backgrounds, 2 == 'beam' backgrounds
@@ -100,7 +97,7 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     plt.close(fig5)      
 
     # PLOT: truth-level neutrino energy of interaction STACKED HIST BY END_PT_LOC
-    loc_labels = [twoBytwo_defs.particle_end_loc_dict[k] for k in twoBytwo_defs.particle_end_loc_dict.keys()]
+    loc_labels = [geo_defs.particle_end_loc_dict[k] for k in geo_defs.particle_end_loc_dict.keys()]
     data6f = []; data6u = []; data6d = []; data6b = []; data6s = []; data6p = []
     data7f = []; data7u = []; data7d = []; data7b = []; data7s = []; data7p = []
     data8f = []; data8u = []; data8d = []; data8b = []; data8s = []; data8p = []
@@ -246,16 +243,16 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
 
     # Get Detector Boundaries for Plotting
     # TPCs
-    tpc_bounds_x = twoBytwo_defs.tpc_bounds(0)
-    tpc_bounds_y = twoBytwo_defs.tpc_bounds(1)[0] # only one set of dims
-    tpc_bounds_z = twoBytwo_defs.tpc_bounds(2)
+    tpc_bounds_x = geo_defs.tpc_bounds(0)
+    tpc_bounds_y = geo_defs.tpc_bounds(1)[0] # only one set of dims
+    tpc_bounds_z = geo_defs.tpc_bounds(2)
     #print("TPC Bounds X:", tpc_bounds_x)
     #print("TPC Bounds Y:", tpc_bounds_y)
     #print("TPC Bounds Z:", tpc_bounds_z)
     # MINERvA
-    MINERvA_bounds_x = twoBytwo_defs.MINERvA_bounds(0)[0] # only one set of dims
-    MINERvA_bounds_y = twoBytwo_defs.MINERvA_bounds(1)[0] # only one set of dims
-    MINERvA_bounds_z = twoBytwo_defs.MINERvA_bounds(2)
+    MINERvA_bounds_x = geo_defs.MINERvA_bounds(0)[0] # only one set of dims
+    MINERvA_bounds_y = geo_defs.MINERvA_bounds(1)[0] # only one set of dims
+    MINERvA_bounds_z = geo_defs.MINERvA_bounds(2)
     #print("MINERvA Bounds X:", MINERvA_bounds_x)
     #print("MINERvA Bounds Y:", MINERvA_bounds_y)
     #print("MINERvA Bounds Z:", MINERvA_bounds_z)
@@ -353,9 +350,13 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     nu_pdg_count=[(pdg, nu_pdg_list.count(pdg)) for pdg in nu_pdg_set]
     nu_pdg_fraction=[100*(i[1]/len(np.array(nu_pdg_list))) for i in nu_pdg_count]
     if nu_pdg_count[0][0] == 14:
-        nu_pdg_labels=['Neutrino', 'Antineutrino']
+        nu_pdg_labels=['Neutrino']
+        if len(nu_pdg_set) > 1:
+            nu_pdg_labels.append('Antineutrino')
     else:
-        nu_pdg_labels=['Antineutrino', 'Neutrino']
+        nu_pdg_labels=['Antineutrino']
+        if len(nu_pdg_set) > 1:
+            nu_pdg_labels.append('Neutrino')
     ax13.pie(nu_pdg_fraction, labels=nu_pdg_labels, autopct='%1.1f%%')
     ax13.set_title(sample_title+r" Event Neutrino vs. Antineutrino Breakdown")
     plt.savefig(sample_type+"_events_neutrino_vs_antineutrino_truth.png")

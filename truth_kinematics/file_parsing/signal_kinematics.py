@@ -1,13 +1,13 @@
-import matplotlib
-import matplotlib.pyplot as plt
-import h5py
-import glob
-import json
-import argparse
+import h5py, glob, argparse
 import numpy as np
-import twoBytwo_defs
-import auxiliary
+import sys
 import signal_characterization as sig_char
+sys.path.append('../../common')
+import file_parsing
+import geometry_methods as geo_methods
+import truth_methods as truth
+import kinematicVariable_methods as kinematics
+sys.path.append('../plotting_scripts')
 from plot_signal_muons import plot_muons
 from plot_signal_hadrons import plot_hadrons
 
@@ -48,34 +48,34 @@ def main(sim_dir, input_type, n_files_processed):
         unique_spill = np.unique(sim_h5['trajectories']['eventID'])
         for spill_id in unique_spill:
 
-            ghdr, gstack, traj, vert, seg = auxiliary.get_spill_data(sim_h5, spill_id, input_type)
+            ghdr, gstack, traj, vert, seg = file_parsing.get_spill_data(sim_h5, spill_id, input_type)
 
             ### partition by vertex ID within beam spill
             for v_i in range(len(vert['vertexID'])):
 
                 vert_pos= [vert['x_vert'][v_i], vert['y_vert'][v_i], vert['z_vert'][v_i]] 
-                vert_in_active_LAr = twoBytwo_defs.fiducialized_vertex( vert_pos ) # Check vertex location relative to FV
+                vert_in_active_LAr = geo_methods.fiducialized_vertex( vert_pos ) # Check vertex location relative to FV
 
                 ##### REQUIRE: neutrino vertex in LAr active volume #####
                 if vert_in_active_LAr==False: continue
 
                 vert_id = vert['vertexID'][v_i]
 
-                nu_mu = auxiliary.signal_nu_pdg(ghdr, vert_id) # nu_mu OR nu_mu_bar
-                is_cc = auxiliary.signal_cc(ghdr, vert_id)
-                mesonless = auxiliary.signal_meson_status(gstack, vert_id)
-                fv_particle_origin=twoBytwo_defs.fiducialized_particle_origin(traj, vert_id)
+                nu_mu = truth.signal_nu_pdg(ghdr, vert_id) # nu_mu OR nu_mu_bar
+                is_cc = truth.signal_cc(ghdr, vert_id)
+                mesonless = truth.signal_meson_status(gstack, vert_id)
+                fv_particle_origin=geo_methods.fiducialized_particle_origin(traj, vert_id)
 
                 ### REQUIRE: (A) nu_mu(_bar), (B) CC interaction, (C) NO final state mesons, (D) final state particle start point in FV
                 if nu_mu==True and is_cc==True and mesonless==True and fv_particle_origin==True:
                     sig_char.muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon_dict)
-                    sig_char.hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, auxiliary.threshold, hadron_dict)
+                    sig_char.hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, kinematics.threshold, hadron_dict)
                     sig_char.get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, signal_dict)
 
     # Save all Python dictionaries to JSON files
-    auxiliary.save_dict_to_json(signal_dict, "signal_dict", True)
-    auxiliary.save_dict_to_json(muon_dict, "muon_dict", True)
-    auxiliary.save_dict_to_json(hadron_dict, "hadron_dict", True)
+    file_parsing.save_dict_to_json(signal_dict, "signal_dict", True)
+    file_parsing.save_dict_to_json(muon_dict, "muon_dict", True)
+    file_parsing.save_dict_to_json(hadron_dict, "hadron_dict", True)
 
     # Save full signal and w.s. bkg counts to TXT file
     signal_count = len(signal_dict)*scale_factor
