@@ -1,3 +1,13 @@
+################################################################################
+##                                                                            ##
+##    CONTAINS: Script to create plots describing muons and hadrons in signal ##
+##              events, using muon and hadron dictionaries created using the  ##
+##              methods in /truth_kinematics/file_parsing/                    ##
+##              signal_characterization.py and a scale factor for scaling     ##
+##              event counts to those expected with 2.5e19 POT.               ##
+##                                                                            ##
+################################################################################
+
 import json
 import argparse
 from plot_signal_muons import plot_muons

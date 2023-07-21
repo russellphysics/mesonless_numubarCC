@@ -1,3 +1,11 @@
+################################################################################
+##                                                                            ##
+##    CONTAINS: Methods to create stacked histograms describing kinematics    ##
+##              of signal and all background events using previously created  ##
+##              JSON dictionaries.                                            ##
+##                                                                            ##
+################################################################################
+
 import numpy as np
 import matplotlib.pyplot as plt
 import json

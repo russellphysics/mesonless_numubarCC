@@ -1,3 +1,11 @@
+################################################################################
+##                                                                            ##
+##    CONTAINS: Script to create JSON dictionaries describing CC background   ##
+##              event final state primary particles and pions. ONLY TRUTH     ##
+##              INFORMATION IS USED.                                          ##
+##                                                                            ##
+################################################################################
+
 import h5py
 import argparse
 import numpy as np

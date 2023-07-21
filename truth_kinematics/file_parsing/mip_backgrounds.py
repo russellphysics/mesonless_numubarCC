@@ -1,3 +1,13 @@
+################################################################################
+##                                                                            ##
+##    CONTAINS: Methods to create python dictionaries describing primary      ##
+##              final state particles (primaries) and pions in background     ##
+##              events (pion_characterization). Also includes methods to      ##
+##              create plots related to threshold backgrounds                 ##
+##              (plot_threshold_backgrounds w/ other helper functions).       ##
+##                                                                            ##
+################################################################################
+
 import matplotlib.pyplot as plt
 import numpy as np
 import sys

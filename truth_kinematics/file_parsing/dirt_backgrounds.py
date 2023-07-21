@@ -1,3 +1,10 @@
+################################################################################
+##                                                                            ##
+##    CONTAINS: Method to create python dictionary with information to        ##
+##              describe dirt background events.                              ##
+##                                                                            ##
+################################################################################
+
 import numpy as np
 sys.path.append('../../common')
 import geometry_methods as geo_methods

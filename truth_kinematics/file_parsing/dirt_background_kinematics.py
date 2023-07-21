@@ -1,3 +1,10 @@
+################################################################################
+##                                                                            ##
+##    CONTAINS: Script to create a JSON dictionary and plots describing muons ##
+##              in dirt background events. ONLY TRUTH INFORMATION IS USED.    ##
+##                                                                            ##
+################################################################################
+
 import h5py
 import argparse
 import numpy as np

@@ -1,3 +1,12 @@
+################################################################################
+##                                                                            ##
+##    CONTAINS: Methods to create python dictionaries with information to     ##
+##              describe general signal events (get_signal_dict, muons in     ##
+##              signal events (muon_characterization), and hadrons in signal  ##
+##              events (hadron_characterization).                             ##
+##                                                                            ##
+################################################################################
+
 import sys
 sys.path.append('../../common')
 import geometry_methods as geo_methods

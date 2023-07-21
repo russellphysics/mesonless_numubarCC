@@ -1,3 +1,10 @@
+################################################################################
+##                                                                            ##
+##    CONTAINS: Methods to create a JSON dictionary describing CC threshold   ##
+##              background events and certain associated plots.               ##
+##                                                                            ##
+################################################################################
+
 import matplotlib.pyplot as plt
 import argparse
 import numpy as np

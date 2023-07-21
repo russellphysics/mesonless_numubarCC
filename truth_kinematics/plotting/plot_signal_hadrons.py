@@ -1,3 +1,13 @@
+################################################################################
+##                                                                            ##
+##    CONTAINS: Script to create plots describing hadrons in signal           ##
+##              events using a hadron dictionary created using methods in     ##
+##              /truth_kinematics/file_parsing/signal_characterization.py     ##
+##              and a scale factor for scaling event counts to those expected ##
+##              with 2.5e19 POT.                                              ##
+##                                                                            ##
+################################################################################
+
 import matplotlib.pyplot as plt
 import numpy as np
 import sys

@@ -1,3 +1,12 @@
+################################################################################
+##                                                                            ##
+##    CONTAINS: Script to create JSON dictionaries describing muons and       ##
+##              hadrons in signal events, plots describing muons and hadron   ##
+##              in signal events, and a text file listing signal event count  ##
+##              information. ONLY TRUTH INFORMATION IS USED.                  ##
+##                                                                            ##
+################################################################################
+
 import h5py, glob, argparse
 import numpy as np
 import sys

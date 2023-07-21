@@ -1,3 +1,10 @@
+################################################################################
+##                                                                            ##
+##    CONTAINS: Template for script to generate JSON dictionaries and plots   ##
+##              describing truth-level kinematic and other information.       ##
+##                                                                            ##
+################################################################################
+
 import h5py
 import argparse
 import numpy as np

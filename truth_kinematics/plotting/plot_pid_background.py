@@ -1,3 +1,10 @@
+################################################################################
+##                                                                            ##
+##    CONTAINS: Methods to create a JSON dictionary describing NC PID         ##
+##              background events and certain associated plots.               ##
+##                                                                            ##
+################################################################################
+
 import matplotlib.pyplot as plt
 import argparse
 import numpy as np

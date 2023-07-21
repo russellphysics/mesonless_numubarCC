@@ -1,10 +1,16 @@
+################################################################################
+##                                                                            ##
+##    CONTAINS: Script to create plots describing muons in dirt background    ##
+##              events using a dictionary created using the methods in        ##
+##              truth_kinematics/file_parsing/dirt_backgrounds.py.            ##
+##                                                                            ##
+################################################################################
+
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
 sys.path.append('../file_parsing')
 sys.path.append('../../common')
-import geometry_defs as geo_defs
-import geometry_methods as geo_methods
 
 
 def plot_dirt_backgrounds(d , sig_bkg =1):
