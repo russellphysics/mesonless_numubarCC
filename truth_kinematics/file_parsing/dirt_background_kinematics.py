@@ -17,7 +17,7 @@ import file_parsing
 import geometry_methods as geo_methods
 import particlePDG_defs as pdg_defs
 import truth_methods as truth
-sys.path.append('../plotting_scripts')
+sys.path.append('../plotting')
 from plot_dirt_background import plot_dirt_backgrounds
 
     
@@ -26,11 +26,18 @@ def main(sim_dir, input_type):
     #sim_h5 = h5py.File(sim_file,'r')
     dirt_muon_dict = dict()
     file_count =0
+
+    file_ext = '' ## Changes based on input type
+
+    if input_type == 'larnd': 
+        file_ext = '.LARNDSIM.h5'
+    elif input_type == 'edep':
+        file_ext = '.EDEPSIM.h5'
     
     #print('start')
-    files = glob.glob(sim_dir+'*h5')
+    files = glob.glob(sim_dir+'/*'+file_ext)
     files.sort(key=os.path.getctime)
-    #print(files)
+    #print("Files:",files)
     
     for sim_file in files:
         file_count+=1

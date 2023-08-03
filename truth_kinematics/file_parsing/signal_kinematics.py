@@ -16,7 +16,7 @@ import file_parsing
 import geometry_methods as geo_methods
 import truth_methods as truth
 import kinematicVariable_methods as kinematics
-sys.path.append('../plotting_scripts')
+sys.path.append('../plotting')
 from plot_signal_muons import plot_muons
 from plot_signal_hadrons import plot_hadrons
 
@@ -37,11 +37,14 @@ def main(sim_dir, input_type, n_files_processed):
     signal_dict = dict() # Initialize dictionary for signal muons for full comparison
     
     file_ext = '' ## Changes based on input type
+    event_spill_id = '' ## Changes based on input type
 
     if input_type == 'larnd': 
         file_ext = '.LARNDSIM.h5'
+        event_spill_id = 'eventID'
     elif input_type == 'edep':
         file_ext = '.EDEPSIM.h5'
+        event_spill_id = 'spillID'
 
     for sim_file in glob.glob(sim_dir+'/*'+file_ext): # Loop over simulation files
 
@@ -54,7 +57,7 @@ def main(sim_dir, input_type, n_files_processed):
         sim_h5 = h5py.File(sim_file,'r')
 
         ### partition file by spill
-        unique_spill = np.unique(sim_h5['trajectories']['eventID'])
+        unique_spill = np.unique(sim_h5['trajectories'][event_spill_id])
         for spill_id in unique_spill:
 
             ghdr, gstack, traj, vert, seg = file_parsing.get_spill_data(sim_h5, spill_id, input_type)

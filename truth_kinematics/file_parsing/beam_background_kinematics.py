@@ -23,18 +23,24 @@ def main(sim_dir, input_type):
     file_ctr=0
 
     file_ext = '' ### modified by commandline argument
-    if input_type=='larnd': file_ext='.LARNDSIM.h5'
-    elif input_type=='edep': file_ext='.EDEPSIM.h5'
-    
+    event_spill_id = '' ## Changes based on input type
+
+    if input_type == 'larnd': 
+        file_ext = '.LARNDSIM.h5'
+        event_spill_id = 'eventID'
+    elif input_type == 'edep':
+        file_ext = '.EDEPSIM.h5'
+        event_spill_id = 'spillID'
+
     for sim_file in glob.glob(sim_dir+'/*'+file_ext):
         file_ctr+=1
-        if file_ctr>100: break
+        if file_ctr>10: break
 #        if file_ctr%10==0: print('FILE #: ',file_ctr)
         print('FILE #: ',file_ctr)
         sim_h5 = h5py.File(sim_file,'r')
     
         ### partition file by spill
-        unique_spill = np.unique(sim_h5['trajectories']['spillID'])
+        unique_spill = np.unique(sim_h5['trajectories'][event_spill_id])
         for spill_id in unique_spill:
             ghdr, gstack, traj, vert, seg = file_parsing.get_spill_data(sim_h5, spill_id, input_type)
 
@@ -54,19 +60,19 @@ def main(sim_dir, input_type):
                 fv_particle_origin=geo_methods.fiducialized_particle_origin(traj, vert_id)
                         
                 ##### THRESHOLD BACKGROUNDS #####
-                if is_cc==True and pionless==False and fv_particle_origin==True:
-                    mip_backgrounds.pion_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, cc_dict)
+#                if is_cc==True and pionless==False and fv_particle_origin==True:
+#                    mip_backgrounds.pion_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, cc_dict)
 #                    mip_backgrounds.primaries(spill_id, vert_id, ghdr, gstack, traj, vert, seg, cc_primaries_dict)
 
                 ##### PID BACKGROUNDS #####
-#                if is_cc==False and pionless==False and fv_particle_origin==True:
-#                    mip_backgrounds.pion_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, nc_dict)
-#                    mip_backgrouns.primaries(spill_id, vert_id, ghdr, gstack, traj, vert, seg, nc_primaries_dict)
+                if is_cc==False and pionless==False and fv_particle_origin==True:
+                    mip_backgrounds.pion_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, nc_dict)
+#                    mip_backgrounds.primaries(spill_id, vert_id, ghdr, gstack, traj, vert, seg, nc_primaries_dict)
 
-    file_parsing.save_dict_to_json(cc_dict, 'cc_pion_backgrounds', True)
-    file_parsing.save_dict_to_json(cc_primaries_dict, 'cc_primaries', True)
-#    auxiliary.save_dict_to_json(nc_dict, 'nc_pion_backgrounds', True)
-#    auxiliary.save_dict_to_json(nc_primaries_dict, 'nc_primaries', True)
+#    file_parsing.save_dict_to_json(cc_dict, 'cc_pion_backgrounds', True)
+#    file_parsing.save_dict_to_json(cc_primaries_dict, 'cc_primaries', True)
+    file_parsing.save_dict_to_json(nc_dict, 'nc_pion_backgrounds', True)
+    file_parsing.save_dict_to_json(nc_primaries_dict, 'nc_primaries', True)
     
 
 

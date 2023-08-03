@@ -6,6 +6,7 @@
 ################################################################################
 
 import numpy as np
+import sys
 sys.path.append('../../common')
 import geometry_methods as geo_methods
 
