@@ -1,13 +1,15 @@
-import matplotlib
-import matplotlib.pyplot as plt
-import h5py
-import glob
+################################################################################
+##                                                                            ##
+##    CONTAINS: Script to create plots describing muons and hadrons in signal ##
+##              events, using muon and hadron dictionaries created using the  ##
+##              methods in /truth_kinematics/file_parsing/                    ##
+##              signal_characterization.py and a scale factor for scaling     ##
+##              event counts to those expected with 2.5e19 POT.               ##
+##                                                                            ##
+################################################################################
+
 import json
 import argparse
-import numpy as np
-import twoBytwo_defs
-import auxiliary
-import signal_characterization as sig_char
 from plot_signal_muons import plot_muons
 from plot_signal_hadrons import plot_hadrons
 

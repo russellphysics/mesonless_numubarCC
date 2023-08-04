@@ -1,8 +1,20 @@
-import matplotlib
-import matplotlib.pyplot as plt
-import twoBytwo_defs
+################################################################################
+##                                                                            ##
+##    CONTAINS: Methods to create python dictionaries with information to     ##
+##              describe general signal events (get_signal_dict, muons in     ##
+##              signal events (muon_characterization), and hadrons in signal  ##
+##              events (hadron_characterization).                             ##
+##                                                                            ##
+################################################################################
+
+import sys
+sys.path.append('../../common')
+import geometry_methods as geo_methods
+import particlePDG_defs as pdg_defs
+import truth_methods as truth
+import singleParticleAssociation_methods as particle_assoc
+import kinematicVariable_methods as kinematics
 import numpy as np
-import auxiliary
 
 ''' TO DO: Add other hadron mult over threshold? '''
 
@@ -71,7 +83,7 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
     ang = truth_level_summ['lep_ang'] *np.pi / 180. # Truth-level muon angle with beam
     nu_energy = truth_level_summ['Enu'] # Truth-level neutrino energy
     q2 = truth_level_summ['Q2'] # Truth-level interaction 4-momentum squared
-    nu_int_type = auxiliary.nu_int_type(ghdr, vert_id) # Neutrino interaction mechanism
+    nu_int_type = truth.nu_int_type(ghdr, vert_id) # Neutrino interaction mechanism
     nu_pdg = truth_level_summ['nu_pdg']
 
     total_edep=0.; contained_edep=0.; total_length=0.; contained_length=0. # Set contained and total track energies and lengths to 0
@@ -91,45 +103,45 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
 
         pdg = fs['pdgId'] # *** pdg ***     
 
-        track_id_set = auxiliary.same_pdg_connected_trajectories(pdg, track_id, final_states, traj, ghdr)
+        track_id_set = particle_assoc.same_pdg_connected_trajectories(pdg, track_id, final_states, traj, ghdr)
         exclude_track_ids.update(track_id_set) # Exclude track IDs associated with same particle from future counting
 
-        is_primary = auxiliary.is_primary_particle(track_id_set, final_states, traj, ghdr) 
+        is_primary = truth.is_primary_particle(track_id_set, final_states, traj, ghdr) 
 
         if is_primary == False: continue # Only look at final state particles
 
-        track_id_at_vertex = auxiliary.find_trajectory_at_vertex(track_id_set, final_states,traj, ghdr)
+        track_id_at_vertex = particle_assoc.find_trajectory_at_vertex(track_id_set, final_states,traj, ghdr)
         final_state_vertex_tid_mask = final_states['trackID'] == track_id_at_vertex
         fs_at_vertex = final_states[final_state_vertex_tid_mask]
 
-        parent_pdg = auxiliary.find_parent_pdg(fs_at_vertex['parentID'],vert_id, traj, ghdr)# *** parent pdg ***
+        parent_pdg = truth.find_parent_pdg(fs_at_vertex['parentID'],vert_id, traj, ghdr)# *** parent pdg ***
 
         if len(track_id_set)>1:
             print("Length of Track ID Set:", len(track_id_set))
 
         for tid in track_id_set:
 
-            total_edep += auxiliary.total_edep_charged_e(tid,traj,seg) # *** total visible energy ***
-            contained_edep+= auxiliary.fv_edep_charged_e(tid, traj, seg)
+            total_edep += kinematics.total_edep_charged_e(tid,traj,seg) # *** total visible energy ***
+            contained_edep+= kinematics.fv_edep_charged_e(tid, traj, seg)
             
-            contained_length+=auxiliary.fv_edep_charged_length(tid, traj, seg) # *** total visible track length ***
-            total_length+=auxiliary.total_edep_charged_length(tid, traj, seg)
+            contained_length+=kinematics.fv_edep_charged_length(tid, traj, seg) # *** total visible track length ***
+            total_length+=kinematics.total_edep_charged_length(tid, traj, seg)
         
         # Characterize Muon Endpoint/Containment
         if len(track_id_set)>1:
-            start_tid = auxiliary.find_trajectory_at_vertex(track_id_set, final_states,traj, ghdr)
+            start_tid = particle_assoc.find_trajectory_at_vertex(track_id_set, final_states,traj, ghdr)
             start_tid_mask = final_states['trackID']==start_tid
             muon_start_traj = final_states[start_tid_mask]
             start_pt = muon_start_traj['xyz_start']
             
-            end_tid = auxiliary.find_forward_primary_particle_end_trajectory(track_id_set, final_states,traj, ghdr)
+            end_tid = particle_assoc.find_forward_primary_particle_end_trajectory(track_id_set, final_states,traj, ghdr)
             end_tid_mask = final_states['trackID']==end_tid
             muon_end_traj = final_states[end_tid_mask]
             end_pt = muon_end_traj['xyz_end']
         else:
             end_pt = fs['xyz_end']
             start_pt = fs['xyz_start']
-        end_pt_loc = twoBytwo_defs.particle_end_loc(start_pt, end_pt)
+        end_pt_loc = geo_methods.particle_end_loc(start_pt, end_pt)
 
     # Save collected info in input muon_dict                                                                                                                         
     muon_dict[(spill_id,vert_id)]=dict(
@@ -184,7 +196,7 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, th
     #print("Final State Hadrons:", gstack_vert_fs_hadrons)
     #print("Final State PDG Stack:", gstack_vert_fs)
     #print("Vertex PDG Stack Set:", gstack_pdg_set)
-    nu_int_type = auxiliary.nu_int_type(ghdr, vert_id) # Neutrino interaction mechanism (Truth)
+    nu_int_type = truth.nu_int_type(ghdr, vert_id) # Neutrino interaction mechanism (Truth)
 
     hadron_mult = len(gstack_vert_fs_hadrons) # F.S. hadron multiplicity
     n_mult = 0
@@ -223,7 +235,7 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, th
             #print("Excluding a track because it has already been studied.")
             continue 
 
-        track_id_set = auxiliary.same_pdg_connected_trajectories(fs['pdgId'], track_id, final_states, traj, ghdr)
+        track_id_set = particle_assoc.same_pdg_connected_trajectories(fs['pdgId'], track_id, final_states, traj, ghdr)
         exclude_track_ids.update(track_id_set) # Exclude track IDs associated with same particle from future counting
         #if fs['pdgId'] == 2112: print("\nTrack ID Set:", track_id_set)
 
@@ -231,28 +243,28 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, th
         fs_total_edep =0.; fs_contained_edep=0. # Reset Edep for individual final states
         for tid in track_id_set:
 
-            total_edep_temp = auxiliary.total_edep_charged_e(tid,traj,seg)
-            contained_edep_temp = auxiliary.fv_edep_charged_e(tid, traj, seg)
+            total_edep_temp = kinematics.total_edep_charged_e(tid,traj,seg)
+            contained_edep_temp = kinematics.fv_edep_charged_e(tid, traj, seg)
             fs_total_edep+=total_edep_temp
             total_edep += total_edep_temp# *** total visible energy ***
             fs_contained_edep+= contained_edep_temp
             contained_edep+= contained_edep_temp
 
-            contained_length+=auxiliary.fv_edep_charged_length(tid, traj, seg) # *** total contained length for protons ***
-            total_length+=auxiliary.total_edep_charged_length(tid, traj, seg)
+            contained_length+=kinematics.fv_edep_charged_length(tid, traj, seg) # *** total contained length for protons ***
+            total_length+=kinematics.total_edep_charged_length(tid, traj, seg)
             
             if fs['pdgId'] == 2212:
-                proton_contained_length+=auxiliary.fv_edep_charged_length(tid, traj, seg) # *** total contained length for protons ***
-                proton_total_length+=auxiliary.total_edep_charged_length(tid, traj, seg)
+                proton_contained_length+=kinematics.fv_edep_charged_length(tid, traj, seg) # *** total contained length for protons ***
+                proton_total_length+=kinematics.total_edep_charged_length(tid, traj, seg)
 
-        if auxiliary.is_primary_particle(track_id_set, final_states, traj, ghdr) and contained_length > threshold \
-            and fs['pdgId'] not in auxiliary.neutral_hadron_pdg_dict.keys():
+        if truth.is_primary_particle(track_id_set, final_states, traj, ghdr) and contained_length > threshold \
+            and fs['pdgId'] not in pdg_defs.neutral_hadron_pdg_dict.keys():
             hadron_mult_over_thresh +=1
             if fs['pdgId'] == 2212: 
                 p_mult_over_thresh += 1
-                p_traj_id_at_vertex = auxiliary.find_trajectory_at_vertex(track_id_set, final_states, traj, ghdr)
-                p_mom = auxiliary.truth_primary_particle_momentum(track_id_set, final_states, traj, ghdr)
-                p_ke += auxiliary.truth_primary_particle_kinetic_energy(fs['pdgId'],track_id_set, final_states, traj, ghdr)
+                p_traj_id_at_vertex = particle_assoc.find_trajectory_at_vertex(track_id_set, final_states, traj, ghdr)
+                p_mom = kinematics.truth_primary_particle_momentum(track_id_set, final_states, traj, ghdr)
+                p_ke += kinematics.truth_primary_particle_kinetic_energy(fs['pdgId'],track_id_set, final_states, traj, ghdr)
                 total_edep_over_thresh += fs_total_edep # *** total visible energy ***
                 contained_edep_over_thresh+= fs_contained_edep
                 if p_mom > lead_proton_momentum:
@@ -262,11 +274,11 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, th
 
                     lead_proton_traj_at_vertex = p_traj_id_at_vertex
                     lead_proton_momentum = p_mom
-                    lead_proton_ang_wrt_beam = auxiliary.angle_wrt_beam_direction(track_id_set, final_states, traj, ghdr)
+                    lead_proton_ang_wrt_beam = kinematics.angle_wrt_beam_direction(track_id_set, final_states, traj, ghdr)
                 elif p_mom <= lead_proton_momentum and p_mom > sub_lead_proton_momentum:
                     sub_lead_proton_traj_at_vertex = p_traj_id_at_vertex
                     sub_lead_proton_momentum = p_mom
-                    sub_lead_proton_ang_wrt_beam = auxiliary.angle_wrt_beam_direction(track_id_set, final_states, traj, ghdr)
+                    sub_lead_proton_ang_wrt_beam = kinematics.angle_wrt_beam_direction(track_id_set, final_states, traj, ghdr)
                 
                 if proton_contained_length > max_proton_contained_length:
                     max_proton_contained_length = proton_contained_length # Update max contained proton length in vertex
@@ -274,7 +286,7 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, th
 
     angle_between_lead_and_sublead_protons = 0. # Initialize angle between leading and subleading protons
     if p_mult_over_thresh >= 2:
-        angle_between_lead_and_sublead_protons = auxiliary.angle_between_two_trajectories(lead_proton_traj_at_vertex, \
+        angle_between_lead_and_sublead_protons = kinematics.angle_between_two_trajectories(lead_proton_traj_at_vertex, \
                                                                                           sub_lead_proton_traj_at_vertex, final_states)
 
     # Save collected info in input hadron_dict

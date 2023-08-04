@@ -1,13 +1,18 @@
-import matplotlib
+################################################################################
+##                                                                            ##
+##    CONTAINS: Methods to create a JSON dictionary describing NC PID         ##
+##              background events and certain associated plots.               ##
+##                                                                            ##
+################################################################################
+
 import matplotlib.pyplot as plt
-import h5py
 import argparse
 import numpy as np
-import twoBytwo_defs
-import auxiliary
-import glob
 import json
 from mpl_toolkits.axes_grid1.inset_locator import (inset_axes, InsetPosition, mark_inset)
+import sys
+sys.path.append('../../common')
+import file_parsing
 
 
 def files_processed(processed_files, total_files=1023, \
@@ -51,9 +56,12 @@ def charged_pion_threshold(d, threshold, scale_factor):
         temp=(spill_id, vertex_id)
         if temp in cp_length.keys():
             if cp_length[temp]>threshold:
-                if d[key]['end_pt_loc'] not in candidate.keys():
-                    candidate[d[key]['end_pt_loc']]=[]
-                candidate[d[key]['end_pt_loc']].append(d[key]['mom'])
+                print("Candidate keys:", candidate.keys())
+                print(d[key])
+                ##### end_pt_loc not yet implemented here, so the following lines break the code:
+                #if d[key]['end_pt_loc'] not in candidate.keys():
+                #    candidate[d[key]['end_pt_loc']]=[]
+                #candidate[d[key]['end_pt_loc']].append(d[key]['mom'])
                     
                 background_dict[temp]=dict(
                     nu_energy=d[key]['nu_energy'],
@@ -97,7 +105,7 @@ def main(nc_json_file, tracking_threshold, n_files_processed):
     scale_factor = files_processed(n_files_processed)
     bgd_dict = charged_pion_threshold(nc_pion_dict, tracking_threshold, \
                                       scale_factor)
-    auxiliary.save_dict_to_json(bgd_dict, 'nc_pid_bkg_dict', True)
+    file_parsing.save_dict_to_json(bgd_dict, 'nc_pid_bkg_dict', True)
     
 
 
