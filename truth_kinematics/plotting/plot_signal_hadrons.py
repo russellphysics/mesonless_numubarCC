@@ -1,13 +1,18 @@
-import matplotlib
+################################################################################
+##                                                                            ##
+##    CONTAINS: Script to create plots describing hadrons in signal           ##
+##              events using a hadron dictionary created using methods in     ##
+##              /truth_kinematics/file_parsing/signal_characterization.py     ##
+##              and a scale factor for scaling event counts to those expected ##
+##              with 2.5e19 POT.                                              ##
+##                                                                            ##
+################################################################################
+
 import matplotlib.pyplot as plt
-import h5py
-import glob
-import json
-import argparse
 import numpy as np
-import twoBytwo_defs
-import auxiliary
-import signal_characterization as sig_char
+import sys
+sys.path.append('../../common')
+import particlePDG_defs as pdg_defs
 
 # PLOT: Hadron kinematics
 #       sig_bkg is an int such that 0 == signal, 1 == 'dirt' backgrounds, 2 == 'beam' backgrounds
@@ -75,7 +80,7 @@ def plot_hadrons(d, scale_factor, sig_bkg = 0):
     #print("Hadron PDG Set:", hadron_fs_pdg_set)
     hadron_fs_pdg_count=[(pdg_set, hadron_fs_pdg_list.count(list(pdg_set))) for pdg_set in hadron_fs_pdg_set]
     hadron_fs_pdg_fraction=[100*(i[1]/len(data2)) for i in hadron_fs_pdg_count]
-    hadron_fs_pdg_labels=['+'.join(str(auxiliary.hadron_pdg_dict[j]) for j in i[0]) for i in hadron_fs_pdg_count]
+    hadron_fs_pdg_labels=['+'.join(str(pdg_defs.hadron_pdg_dict[j]) for j in i[0]) for i in hadron_fs_pdg_count]
     #print("Number of Events:", len(hadron_fs_pdg_list))
     #print("Hadron FS PDG Count:", hadron_fs_pdg_count)
     #print("Hadron FS PDG Fractions:", hadron_fs_pdg_fraction)

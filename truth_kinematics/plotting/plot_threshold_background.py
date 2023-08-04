@@ -1,13 +1,19 @@
-import matplotlib
+################################################################################
+##                                                                            ##
+##    CONTAINS: Methods to create a JSON dictionary describing CC threshold   ##
+##              background events and certain associated plots.               ##
+##                                                                            ##
+################################################################################
+
 import matplotlib.pyplot as plt
-import h5py
 import argparse
 import numpy as np
-import twoBytwo_defs
-import auxiliary
-import glob
 import json
 from mpl_toolkits.axes_grid1.inset_locator import (inset_axes, InsetPosition, mark_inset)
+import sys
+sys.path.append('../../common')
+import file_parsing
+
 # threshold backgrounds: ==> only addressing charged pions for now...!!!
 # (1) any charged pions in event are sufficiently short such that they are undetectable --> less than 3 cm (6-7 pixels)
 # (2) one pi0 gamma escapes FV
@@ -97,7 +103,7 @@ def main(cc_json_file, tracking_threshold, n_files_processed):
     scale_factor = files_processed(n_files_processed)
     bgd_dict = charged_pion_threshold(cc_pion_dict, tracking_threshold, \
                                       scale_factor)
-    auxiliary.save_dict_to_json(bgd_dict, 'cc_threshold_bkg_dict', True)
+    file_parsing.save_dict_to_json(bgd_dict, 'cc_threshold_bkg_dict', True)
     
 
 
