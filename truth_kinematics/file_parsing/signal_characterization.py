@@ -40,7 +40,7 @@ INCLUDED METHODS:
              method runs'''
 def get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, signal_dict):
 
-    ghdr_vert_mask = ghdr['vertexID']==vert_id
+    ghdr_vert_mask = ghdr['vertex_id']==vert_id
     truth_level_summ = ghdr[ghdr_vert_mask]
 
     mom = truth_level_summ['lep_mom'] # Truth-level outgoing muon momentum
@@ -73,10 +73,10 @@ def get_truth_dict(spill_id, vert_id, ghdr, gstack, traj, vert, seg, signal_dict
              method runs'''
 def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon_dict):
 
-    traj_vert_mask = traj['vertexID']==vert_id 
+    traj_vert_mask = traj['vertex_id']==vert_id 
     final_states = traj[traj_vert_mask] # Get trajectories associated with vertex
 
-    ghdr_vert_mask = ghdr['vertexID']==vert_id
+    ghdr_vert_mask = ghdr['vertex_id']==vert_id
     truth_level_summ = ghdr[ghdr_vert_mask] # Get GENIE truth info associated with vertex
 
     mom = truth_level_summ['lep_mom'] # Truth-level outgoing muon momentum
@@ -88,7 +88,7 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
 
     total_edep=0.; contained_edep=0.; total_length=0.; contained_length=0. # Set contained and total track energies and lengths to 0
 
-    gstack_vert_mask = gstack['vertexID']==vert_id
+    gstack_vert_mask = gstack['vertex_id']==vert_id
     gstack_pdg_set = set(gstack[gstack_vert_mask]['part_pdg']) # Get set of PDG IDs for particles associated with vertex
 
     exclude_track_ids = set() # Create set of track IDs to exclude to eliminate redundancies
@@ -96,12 +96,12 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
     for fs in final_states:
 
         # Choose nu_mu_bar or nu_mu vertices
-        if (abs(fs['pdgId']) != 13): continue
+        if (abs(fs['pdg_id']) != 13): continue
         
-        track_id = fs['trackID']
+        track_id = fs['traj_id']
         if track_id in exclude_track_ids: continue
 
-        pdg = fs['pdgId'] # *** pdg ***     
+        pdg = fs['pdg_id'] # *** pdg ***     
 
         track_id_set = particle_assoc.same_pdg_connected_trajectories(pdg, track_id, final_states, traj, ghdr)
         exclude_track_ids.update(track_id_set) # Exclude track IDs associated with same particle from future counting
@@ -111,10 +111,10 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
         if is_primary == False: continue # Only look at final state particles
 
         track_id_at_vertex = particle_assoc.find_trajectory_at_vertex(track_id_set, final_states,traj, ghdr)
-        final_state_vertex_tid_mask = final_states['trackID'] == track_id_at_vertex
+        final_state_vertex_tid_mask = final_states['traj_id'] == track_id_at_vertex
         fs_at_vertex = final_states[final_state_vertex_tid_mask]
 
-        parent_pdg = truth.find_parent_pdg(fs_at_vertex['parentID'],vert_id, traj, ghdr)# *** parent pdg ***
+        parent_pdg = truth.find_parent_pdg(fs_at_vertex['parent_id'],vert_id, traj, ghdr)# *** parent pdg ***
 
         if len(track_id_set)>1:
             print("Length of Track ID Set:", len(track_id_set))
@@ -130,12 +130,12 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
         # Characterize Muon Endpoint/Containment
         if len(track_id_set)>1:
             start_tid = particle_assoc.find_trajectory_at_vertex(track_id_set, final_states,traj, ghdr)
-            start_tid_mask = final_states['trackID']==start_tid
+            start_tid_mask = final_states['traj_id']==start_tid
             muon_start_traj = final_states[start_tid_mask]
             start_pt = muon_start_traj['xyz_start']
             
             end_tid = particle_assoc.find_forward_primary_particle_end_trajectory(track_id_set, final_states,traj, ghdr)
-            end_tid_mask = final_states['trackID']==end_tid
+            end_tid_mask = final_states['traj_id']==end_tid
             muon_end_traj = final_states[end_tid_mask]
             end_pt = muon_end_traj['xyz_end']
         else:
@@ -174,16 +174,16 @@ def muon_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, muon
 def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, threshold, hadron_dict):
         
     #print("\nHADRONS:")
-    traj_vert_mask = traj['vertexID']==vert_id
+    traj_vert_mask = traj['vertex_id']==vert_id
     final_states = traj[traj_vert_mask] # Trajectories associated with vertex
 
     leptons_abs_pdg = [11, 12, 13, 14, 15, 16] # List of lepton PDG IDs (abs value)
 
-    ghdr_vert_mask = ghdr['vertexID']==vert_id
+    ghdr_vert_mask = ghdr['vertex_id']==vert_id
     truth_level_summ = ghdr[ghdr_vert_mask] # Get GENIE truth info associated with vertex
     nu_pdg = truth_level_summ['nu_pdg']
     
-    gstack_vert_mask = gstack['vertexID']==vert_id
+    gstack_vert_mask = gstack['vertex_id']==vert_id
     gstack_vert = gstack[gstack_vert_mask] # Particle ID information associated with vertex
 
     gstack_vert_fs_mask = gstack_vert['part_status']==1 # Excludes initial state particles
@@ -226,18 +226,18 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, th
                               # (i.e. if they've been identified as being from the same particle as an earlier track)
     for fs in final_states:
 
-        if abs(fs['pdgId']) in leptons_abs_pdg: continue # No leptons
-        if fs['pdgId'] > 1000000000: continue # No nuclei
-        if fs['pdgId'] == 22: continue # No photons
+        if abs(fs['pdg_id']) in leptons_abs_pdg: continue # No leptons
+        if fs['pdg_id'] > 1000000000: continue # No nuclei
+        if fs['pdg_id'] == 22: continue # No photons
         
-        track_id = fs['trackID']
+        track_id = fs['traj_id']
         if track_id in exclude_track_ids: 
             #print("Excluding a track because it has already been studied.")
             continue 
 
-        track_id_set = particle_assoc.same_pdg_connected_trajectories(fs['pdgId'], track_id, final_states, traj, ghdr)
+        track_id_set = particle_assoc.same_pdg_connected_trajectories(fs['pdg_id'], track_id, final_states, traj, ghdr)
         exclude_track_ids.update(track_id_set) # Exclude track IDs associated with same particle from future counting
-        #if fs['pdgId'] == 2112: print("\nTrack ID Set:", track_id_set)
+        #if fs['pdg_id'] == 2112: print("\nTrack ID Set:", track_id_set)
 
         proton_contained_length = 0.; proton_total_length=0. # Reset proton track lengths
         fs_total_edep =0.; fs_contained_edep=0. # Reset Edep for individual final states
@@ -253,18 +253,18 @@ def hadron_characterization(spill_id, vert_id, ghdr, gstack, traj, vert, seg, th
             contained_length+=kinematics.fv_edep_charged_length(tid, traj, seg) # *** total contained length for protons ***
             total_length+=kinematics.total_edep_charged_length(tid, traj, seg)
             
-            if fs['pdgId'] == 2212:
+            if fs['pdg_id'] == 2212:
                 proton_contained_length+=kinematics.fv_edep_charged_length(tid, traj, seg) # *** total contained length for protons ***
                 proton_total_length+=kinematics.total_edep_charged_length(tid, traj, seg)
 
         if truth.is_primary_particle(track_id_set, final_states, traj, ghdr) and contained_length > threshold \
-            and fs['pdgId'] not in pdg_defs.neutral_hadron_pdg_dict.keys():
+            and fs['pdg_id'] not in pdg_defs.neutral_hadron_pdg_dict.keys():
             hadron_mult_over_thresh +=1
-            if fs['pdgId'] == 2212: 
+            if fs['pdg_id'] == 2212: 
                 p_mult_over_thresh += 1
                 p_traj_id_at_vertex = particle_assoc.find_trajectory_at_vertex(track_id_set, final_states, traj, ghdr)
                 p_mom = kinematics.truth_primary_particle_momentum(track_id_set, final_states, traj, ghdr)
-                p_ke += kinematics.truth_primary_particle_kinetic_energy(fs['pdgId'],track_id_set, final_states, traj, ghdr)
+                p_ke += kinematics.truth_primary_particle_kinetic_energy(fs['pdg_id'],track_id_set, final_states, traj, ghdr)
                 total_edep_over_thresh += fs_total_edep # *** total visible energy ***
                 contained_edep_over_thresh+= fs_contained_edep
                 if p_mom > lead_proton_momentum:

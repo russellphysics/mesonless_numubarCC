@@ -1,3 +1,3 @@
-Signal Events (scaled to 2.5e19 POT): 14070.0
-Number of files used to get count: 1023
+Signal Events (scaled to 2.5e19 POT): 13225.0
+Number of files used to get count: 1024
 Scale factor:2.5

@@ -271,8 +271,9 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     fig11, ax11 = plt.subplots(figsize=(8,6))
     data11x = np.array([d[key]['muon_start'][0] for key in d.keys()])
     data11y = np.array([d[key]['muon_start'][1] for key in d.keys()])
-    bins11 = np.linspace(-500,500,101)
-    counts11, bins11x, bins11y = np.histogram2d(np.array(data11x), np.array(data11y), bins=bins11)
+    bins11xa = np.linspace(-500,500,101)
+    bins11ya = np.linspace(-500-268,500-268,101)
+    counts11, bins11x, bins11y = np.histogram2d(np.array(data11x), np.array(data11y), bins=(bins11xa, bins11ya))
     b11xmesh, b11ymesh = np.meshgrid(bins11x, bins11y)
     counts11 = counts11.T # NOTE: Hist2D doesn't follow Cartesian coords, so need to transpose counts for plotting
     plot_start = ax11.pcolormesh(b11xmesh, b11ymesh,counts11*scale_factor)
@@ -312,8 +313,9 @@ def plot_muons(d, scale_factor, sig_bkg = 0):
     fig12, ax12 = plt.subplots(figsize=(8,6))
     data12x = np.array([d[key]['muon_end'][0] for key in d.keys()])
     data12y = np.array([d[key]['muon_end'][1] for key in d.keys()])
-    bins12 = np.linspace(-500,500,101)
-    counts12, bins12x, bins12y = np.histogram2d(np.array(data12x), np.array(data12y), bins=bins12)
+    bins12xa = np.linspace(-500,500,101)
+    bins12ya = np.linspace(-500-268,500-268,101)
+    counts12, bins12x, bins12y = np.histogram2d(np.array(data12x), np.array(data12y), bins=(bins12xa, bins12ya))
     b12xmesh, b12ymesh = np.meshgrid(bins12x, bins12y)
     counts12 = counts12.T # NOTE: Hist2D doesn't follow Cartesian coords, so need to transpose counts for plotting
     plot_end = ax12.pcolormesh(b12xmesh, b12ymesh,counts12*scale_factor)
