@@ -25,8 +25,8 @@ threshold = 1.2 # stand-in threshold in cm (~3 pixels)
 def truth_primary_particle_kinetic_energy(pdg, track_id_set, vertex_assoc_traj, traj, ghdr):
 
     traj_id_at_vertex = particle_assoc.find_trajectory_at_vertex(track_id_set, vertex_assoc_traj, traj, ghdr)
-    trackid_at_vertex_mask = vertex_assoc_traj['trackID']==traj_id_at_vertex
-    track_at_vertex = vertex_assoc_traj[trackid_at_vertex_mask] 
+    traj_id_at_vertex_mask = vertex_assoc_traj['traj_id']==traj_id_at_vertex
+    track_at_vertex = vertex_assoc_traj[traj_id_at_vertex_mask] 
     energy = track_at_vertex['E_start']
     ke = energy - particlePDG_defs.rest_mass_dict[pdg]
 
@@ -36,8 +36,8 @@ def truth_primary_particle_kinetic_energy(pdg, track_id_set, vertex_assoc_traj, 
 def truth_primary_particle_momentum(track_id_set, vertex_assoc_traj, traj, ghdr):
 
     traj_id_at_vertex = particle_assoc.find_trajectory_at_vertex(track_id_set, vertex_assoc_traj, traj, ghdr)
-    trackid_at_vertex_mask = vertex_assoc_traj['trackID']==traj_id_at_vertex
-    track_at_vertex = vertex_assoc_traj[trackid_at_vertex_mask] 
+    traj_id_at_vertex_mask = vertex_assoc_traj['traj_id']==traj_id_at_vertex
+    track_at_vertex = vertex_assoc_traj[traj_id_at_vertex_mask] 
     mom = np.sqrt(np.sum(track_at_vertex['pxyz_start']**2))
 
     return mom
@@ -45,8 +45,8 @@ def truth_primary_particle_momentum(track_id_set, vertex_assoc_traj, traj, ghdr)
 
 ####--------------------- ENERGY DEPOSITION (IN TPC) -----------------------####
 
-def tpc_edep_charged_e(trackID, traj, seg):
-    seg_id_mask=seg['trackID']==trackID
+def tpc_edep_charged_e(traj_id, traj, seg):
+    seg_id_mask=seg['traj_id']==traj_id
     contained_e={}
     for i in range(8): contained_e[i]=0.
     for sg in seg[seg_id_mask]:
@@ -59,18 +59,18 @@ def tpc_edep_charged_e(trackID, traj, seg):
     return contained_e
 
 
-def tpc_contained_energy(pdg, trackID, traj, seg):
+def tpc_contained_energy(pdg, traj_id, traj, seg):
     if pdg in particlePDG_defs.neutral_pdg:
         temp={}
         for i in range(8): temp[i]=0.
         return temp
-    else: return tpc_edep_charged_e(trackID, traj, seg)
+    else: return tpc_edep_charged_e(traj_id, traj, seg)
 
 
 ####---------------- ENERGY DEPOSITION (FIDUCIAL VOLUME) -------------------####
 
-def fv_edep_charged_e(trackID, traj, seg):
-    seg_id_mask=seg['trackID']==trackID
+def fv_edep_charged_e(traj_id, traj, seg):
+    seg_id_mask=seg['traj_id']==traj_id
     contained_e=0.
     for sg in seg[seg_id_mask]:
         if geometry_methods.fiducialized_vertex([(sg['x_start']+sg['x_end'])/2.,
@@ -80,14 +80,14 @@ def fv_edep_charged_e(trackID, traj, seg):
     return contained_e
 
 
-def fv_edep_neutral_e(trackID, traj, seg):
+def fv_edep_neutral_e(traj_id, traj, seg):
     flag=True; daughter_track_ids=set()
-    temp_track_id=[trackID]
+    temp_track_id=[traj_id]
     while flag==True:
         second_temp_track_id=[]
         for ttid in temp_track_id:
-            parent_mask = traj['parentID']==trackID
-            daughter_id=traj[parent_mask]['trackID']
+            parent_mask = traj['parent_id']==traj_id
+            daughter_id=traj[parent_mask]['traj_id']
             if len(daughter_id)!=0:
                 for did in daughter_id:
                     daughter_track_ids.add(did)
@@ -101,28 +101,28 @@ def fv_edep_neutral_e(trackID, traj, seg):
     return contained_e
 
 
-def fv_contained_energy(pdg, trackID, traj, seg):
-    if pdg in particlePDG_defs.neutral_pdg: return 0.#fv_edep_neutral_e(trackID, traj, seg)
-    else: return fv_edep_charged_e(trackID, traj, seg)
+def fv_contained_energy(pdg, traj_id, traj, seg):
+    if pdg in particlePDG_defs.neutral_pdg: return 0.#fv_edep_neutral_e(traj_id, traj, seg)
+    else: return fv_edep_charged_e(traj_id, traj, seg)
 
 
 ####------------------ ENERGY DEPOSITION (TOTAL VOLUME) --------------------####
 
-def total_edep_charged_e(trackID, traj, seg):
-    seg_id_mask=seg['trackID']==trackID
+def total_edep_charged_e(traj_id, traj, seg):
+    seg_id_mask=seg['traj_id']==traj_id
     total_e=0.
     for sg in seg[seg_id_mask]: total_e+=sg['dE']
     return total_e
 
 
-def total_edep_neutral_e(trackID, traj, seg):
+def total_edep_neutral_e(traj_id, traj, seg):
     flag=True; daughter_track_ids=set()
-    temp_track_id=[trackID]
+    temp_track_id=[traj_id]
     while flag==True:
         second_temp_track_id=[]
         for ttid in temp_track_id:
-            parent_mask = traj['parentID']==trackID
-            daughter_id=traj[parent_mask]['trackID']
+            parent_mask = traj['parent_id']==traj_id
+            daughter_id=traj[parent_mask]['traj_id']
             if len(daughter_id)!=0:
                 for did in daughter_id:
                     daughter_track_ids.add(did)
@@ -136,15 +136,15 @@ def total_edep_neutral_e(trackID, traj, seg):
     return total_e
 
 
-def total_energy(pdg, trackID, traj, seg):
-    if pdg in particlePDG_defs.neutral_pdg: return 0.#total_edep_neutral_e(trackID, traj, seg)
-    else: return total_edep_charged_e(trackID, traj, seg)
+def total_energy(pdg, traj_id, traj, seg):
+    if pdg in particlePDG_defs.neutral_pdg: return 0.#total_edep_neutral_e(traj_id, traj, seg)
+    else: return total_edep_charged_e(traj_id, traj, seg)
 
 
 ####------------------- TRACK LENGTH (FIDUCIAL VOLUME) ---------------------####
 
-def fv_edep_charged_length(trackID, traj, seg):
-    seg_id_mask=seg['trackID']==trackID
+def fv_edep_charged_length(traj_id, traj, seg):
+    seg_id_mask=seg['traj_id']==traj_id
     contained_length=0.
     for sg in seg[seg_id_mask]:
         if geometry_methods.fiducialized_vertex([(sg['x_start']+sg['x_end'])/2.,
@@ -156,16 +156,16 @@ def fv_edep_charged_length(trackID, traj, seg):
     return contained_length
 
 
-def fv_contained_length(pdg, trackID, traj, seg):
+def fv_contained_length(pdg, traj_id, traj, seg):
     if pdg in particlePDG_defs.neutral_pdg: return 0.
-    else: return fv_edep_charged_length(trackID, traj, seg)
+    else: return fv_edep_charged_length(traj_id, traj, seg)
 
 
 ####--------------------- TRACK LENGTH (TOTAL VOLUME) ----------------------####
 
 
-def total_edep_charged_length(trackID, traj, seg):
-    seg_id_mask=seg['trackID']==trackID
+def total_edep_charged_length(traj_id, traj, seg):
+    seg_id_mask=seg['traj_id']==traj_id
     contained_length=0.
     for sg in seg[seg_id_mask]:
             contained_length+=np.sqrt( (sg['x_start']-sg['x_end'])**2+
@@ -174,19 +174,19 @@ def total_edep_charged_length(trackID, traj, seg):
     return contained_length
 
 
-def total_length(pdg, trackID, traj, seg):
+def total_length(pdg, traj_id, traj, seg):
     if pdg in particlePDG_defs.neutral_pdg: return 0.
-    else: return total_edep_charged_length(trackID, traj, seg)
+    else: return total_edep_charged_length(traj_id, traj, seg)
 
 
 ####---------------------------- TRACK ANGLES ------------------------------####
 
-def angle_wrt_beam_direction(trackid_set, vertex_assoc_traj,traj, ghdr):
+def angle_wrt_beam_direction(traj_id_set, vertex_assoc_traj,traj, ghdr):
 
-    trackid_at_vertex = particle_assoc.find_trajectory_at_vertex(trackid_set, vertex_assoc_traj,traj, ghdr) # find track id for trajectory at vertex
+    traj_id_at_vertex = particle_assoc.find_trajectory_at_vertex(traj_id_set, vertex_assoc_traj,traj, ghdr) # find track id for trajectory at vertex
 
-    trackid_at_vertex_mask = vertex_assoc_traj['trackID']==trackid_at_vertex
-    track_at_vertex = vertex_assoc_traj[trackid_at_vertex_mask] # primary particle trajectory from vertex
+    traj_id_at_vertex_mask = vertex_assoc_traj['traj_id']==traj_id_at_vertex
+    track_at_vertex = vertex_assoc_traj[traj_id_at_vertex_mask] # primary particle trajectory from vertex
 
     particle_start = track_at_vertex['xyz_start'][0]
     particle_end = track_at_vertex['xyz_end'][0]
@@ -205,15 +205,15 @@ def angle_wrt_beam_direction(trackid_set, vertex_assoc_traj,traj, ghdr):
     return angle_wrt_beam 
 
 
-def angle_between_two_trajectories(traj_trackid_one, traj_trackid_two, vertex_assoc_traj):
+def angle_between_two_trajectories(traj_traj_id_one, traj_traj_id_two, vertex_assoc_traj):
 
-    traj_trackid_one_mask = vertex_assoc_traj['trackID']==traj_trackid_one
-    traj_one = vertex_assoc_traj[traj_trackid_one_mask] # trajectory #1
-    #print("Trajectory track ID One:", traj_trackid_one)
+    traj_traj_id_one_mask = vertex_assoc_traj['traj_id']==traj_traj_id_one
+    traj_one = vertex_assoc_traj[traj_traj_id_one_mask] # trajectory #1
+    #print("Trajectory track ID One:", traj_traj_id_one)
 
-    traj_trackid_two_mask = vertex_assoc_traj['trackID']==traj_trackid_two
-    traj_two = vertex_assoc_traj[traj_trackid_two_mask] # trajectory #2
-    #print("Trajectory track ID Two:", traj_trackid_two)
+    traj_traj_id_two_mask = vertex_assoc_traj['traj_id']==traj_traj_id_two
+    traj_two = vertex_assoc_traj[traj_traj_id_two_mask] # trajectory #2
+    #print("Trajectory track ID Two:", traj_traj_id_two)
 
     particle_one_start = traj_one['xyz_start'][0]
     particle_one_end = traj_one['xyz_end'][0]

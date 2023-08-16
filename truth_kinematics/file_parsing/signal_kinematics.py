@@ -24,9 +24,9 @@ def main(sim_dir, input_type, n_files_processed):
 
     test_count = 0
 
-    ### NOTE: Current POT scaling is based on MiniRun3 larnd file situation
-    if int(n_files_processed) < 1023.: 
-        scale_factor = (1./(int(n_files_processed)/1023.))*2.5
+    ### NOTE: Current POT scaling is based on MiniRun4 larnd file situation
+    if int(n_files_processed) < 1024.: 
+        scale_factor = (1./(int(n_files_processed)/1024.))*2.5
     else:
         scale_factor = 2.5
 
@@ -41,10 +41,10 @@ def main(sim_dir, input_type, n_files_processed):
 
     if input_type == 'larnd': 
         file_ext = '.LARNDSIM.h5'
-        event_spill_id = 'eventID'
+        event_spill_id = 'event_id' #new for MiniRun 4
     elif input_type == 'edep':
         file_ext = '.EDEPSIM.h5'
-        event_spill_id = 'spillID'
+        event_spill_id = 'event_id' #new for MiniRun 4
 
     for sim_file in glob.glob(sim_dir+'/*'+file_ext): # Loop over simulation files
 
@@ -55,6 +55,7 @@ def main(sim_dir, input_type, n_files_processed):
             print("Processing file: ", str(test_count), "/", str(n_files_processed))
 
         sim_h5 = h5py.File(sim_file,'r')
+        #print(sim_h5.keys(),'\n')
 
         ### partition file by spill
         unique_spill = np.unique(sim_h5['trajectories'][event_spill_id])
@@ -63,15 +64,17 @@ def main(sim_dir, input_type, n_files_processed):
             ghdr, gstack, traj, vert, seg = file_parsing.get_spill_data(sim_h5, spill_id, input_type)
 
             ### partition by vertex ID within beam spill
-            for v_i in range(len(vert['vertexID'])):
+            #print("Number of unique vertices in spill:", len(vert['vertex_id']))
+            for v_i in range(len(vert['vertex_id'])):
 
                 vert_pos= [vert['x_vert'][v_i], vert['y_vert'][v_i], vert['z_vert'][v_i]] 
                 vert_in_active_LAr = geo_methods.fiducialized_vertex( vert_pos ) # Check vertex location relative to FV
 
                 ##### REQUIRE: neutrino vertex in LAr active volume #####
-                if vert_in_active_LAr==False: continue
+                if vert_in_active_LAr==False: 
+                    continue
 
-                vert_id = vert['vertexID'][v_i]
+                vert_id = vert['vertex_id'][v_i]
 
                 nu_mu = truth.signal_nu_pdg(ghdr, vert_id) # nu_mu OR nu_mu_bar
                 is_cc = truth.signal_cc(ghdr, vert_id)

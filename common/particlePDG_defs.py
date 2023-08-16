@@ -15,6 +15,7 @@ nu_mu_pdg=14
 ####------------------ PDG ID/PARTICLE LABEL DICTIONARIES ------------------####
 
 hadron_pdg_dict ={2112:'n',
+                 -2112:r'$\bar{n}$',
                   2212:'p',
                  -2212:r'$\bar{p}$', 
                   3112:r'$\Sigma^-$',
@@ -28,6 +29,7 @@ hadron_pdg_dict ={2112:'n',
                   4122:r'$\Lambda_c^+$'} 
 
 neutral_hadron_pdg_dict ={2112:'n',
+                         -2112:r'$\bar{n}$',
                           3122:r'$\Lambda^0$',
                          -3122:r'$\bar{\Lambda}^0$',
                           3212:r'$\Sigma^0$',

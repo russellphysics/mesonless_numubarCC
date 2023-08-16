@@ -57,7 +57,7 @@ def tpc_bounds(i):
                               [33.5,0.,33.5]]
             
     # The position of the 2x2 center, relative to the center of the ND hall
-    detector_center = [0., 52.25,0.]
+    detector_center = [0., -268., 1300.] #[0., 52.25,0.] (MiniRun3)
         
     # Get the tpc bounds relative to the tpc center in the ith coordinates
     tpc_bounds = np.array([-active_tpc_widths[i]/2., active_tpc_widths[i]/2.])
@@ -82,7 +82,7 @@ def MINERvA_bounds(i):
     """
             
     # Taken from the gdml file.
-    MINERvA_center = [0., 43., -654.865]
+    MINERvA_center = [0., 43.-52.5-268, -654.865+1300.]
                         
     # From GDML file, the length of one side of the outer detector in cm
     side_length = 199.439876988864

@@ -13,7 +13,7 @@ import geometry_defs
 ####------------------ POSITION LOCATION CLASSIFICATION --------------------####
 
 def fiducialized_particle_origin(traj, vert_id):
-    traj_vert_mask = traj['vertexID']==vert_id
+    traj_vert_mask = traj['vertex_id']==vert_id
     final_states = traj[traj_vert_mask]
     for fs in final_states:
         if fiducialized_vertex(fs['xyz_start'])==True:
@@ -79,8 +79,8 @@ def minerva_vertex(vert_pos):
 
 ####------------------ PARTICLE CONTAINMENT / ENDPOINTS --------------------####
 
-def particle_containment(traj, trackID):
-    mask = traj['trackID']==trackID
+def particle_containment(traj, traj_id):
+    mask = traj['traj_id']==traj_id
     start=fiducialized_vertex(traj[mask]['xyz_start'][0].tolist())
     end=fiducialized_vertex(traj[mask]['xyz_end'][0].tolist())
     if start==True and end==True: return 'fc' # fully contained
